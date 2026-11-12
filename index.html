@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14201F">
+<title>Usta — мастера Турткуля</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700;800&display=swap">
+<style>
+:root{--ink:#14201F;--ink2:#26343A;--bg:#F2F3EF;--card:#FFFFFF;--muted:#56625F;--line:#C9CEC6;--yellow:#FFC21A;--yellow-soft:#FFEFB8;--green:#12704A;--red:#A3271B;--on-dark:#E6EAE8}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font-family:'Golos Text',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-size:16px;line-height:1.4}
+#app{max-width:520px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;background:var(--bg)}
+a{color:inherit;text-decoration:none}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid #2F7BD9;outline-offset:2px}
+.top{background:var(--ink);color:#fff;padding:calc(20px + env(safe-area-inset-top,0px)) 16px 16px;display:flex;flex-direction:column;gap:14px}
+.row{display:flex;align-items:center;gap:10px}
+.between{justify-content:space-between}
+.logo{width:36px;height:36px;border-radius:10px;background:var(--yellow);color:var(--ink);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px}
+.brand{font-size:24px;font-weight:800;letter-spacing:-.5px}
+.city{font-size:14px;color:var(--on-dark)}
+.langs{display:flex;gap:6px;flex-wrap:wrap}
+.chip{min-height:44px;padding:0 9px;border-radius:22px;border:1px solid #5E6C69;background:transparent;color:var(--on-dark);font-weight:500;font-size:13px;flex:1 1 auto}
+.chip[aria-pressed="true"]{background:var(--yellow);border-color:var(--yellow);color:var(--ink);font-weight:700}
+.search{display:flex;align-items:center;gap:10px;background:#fff;border-radius:14px;padding:0 14px;height:52px}
+.search input{flex:1;min-width:0;border:0;outline:0;background:transparent;color:var(--ink)}
+.back{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:var(--ink2);border:0;flex-shrink:0}
+h1{margin:0;font-size:22px;font-weight:700;text-wrap:balance}
+h2{margin:0;font-size:20px;font-weight:700}
+h3{margin:0;font-size:16px;font-weight:700}
+main{padding:16px;display:flex;flex-direction:column;gap:12px;flex:1}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.cat{background:var(--card);border-radius:16px;padding:12px 10px;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;min-width:0;min-height:64px}
+.cat span:last-child{min-width:0}
+.ico{width:40px;height:40px;border-radius:12px;background:var(--yellow-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cta{background:var(--yellow);border-radius:18px;padding:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:auto}
+.cta b{display:block;font-size:17px}
+.cta small{font-size:14px}
+.card{background:var(--card);border-radius:16px;padding:14px;display:flex;align-items:center;gap:12px}
+.card .info{display:flex;align-items:center;gap:12px;flex:1;min-width:0}
+.ava{width:52px;height:52px;border-radius:26px;background:var(--yellow-soft);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;flex-shrink:0}
+.txt{display:flex;flex-direction:column;gap:2px;min-width:0}
+.txt b{font-size:16px;overflow-wrap:anywhere}
+.txt span{font-size:14px;color:var(--muted);overflow-wrap:anywhere}
+.call-round{width:48px;height:48px;border-radius:24px;background:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.muted{color:var(--muted);font-size:14px}
+.center{text-align:center}
+.panel{background:var(--card);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.panel p{margin:0;white-space:pre-line;overflow-wrap:anywhere}
+.hero{display:flex;align-items:center;gap:14px}
+.hero .ava{width:76px;height:76px;border-radius:38px;background:var(--yellow);font-size:26px;font-weight:800;color:var(--ink)}
+.hero .sub{font-size:15px;color:var(--on-dark)}
+.bar{position:sticky;bottom:0;padding:12px 16px calc(16px + env(safe-area-inset-bottom,0px));background:var(--card);border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.btn{min-height:56px;border-radius:16px;border:0;font-weight:700;font-size:18px;display:flex;align-items:center;justify-content:center;gap:10px;padding:0 16px;width:100%}
+.btn.green{background:var(--green);color:#fff}
+.btn.yellow{background:var(--yellow);color:var(--ink)}
+.btn.ghost{background:transparent;border:1px solid var(--line);font-size:16px;min-height:48px;font-weight:600}
+.btn.danger{background:transparent;color:var(--red);font-size:15px;min-height:44px;font-weight:600}
+.btn[disabled]{opacity:.6}
+.phone{font-size:18px;font-weight:600;text-align:center;user-select:all;font-variant-numeric:tabular-nums}
+form{display:flex;flex-direction:column;gap:12px}
+.f{display:flex;flex-direction:column;gap:6px}
+.f label{font-size:14px;font-weight:600}
+.f input,.f select,.f textarea{min-height:50px;border:1px solid var(--line);border-radius:12px;padding:0 14px;background:#fff;width:100%}
+.f textarea{padding:12px 14px;min-height:96px;resize:vertical}
+.hint{font-size:13px;color:var(--muted)}
+.err{background:#FBE3DF;color:#7A1C12;border-radius:12px;padding:12px 14px;font-size:15px}
+.ok{background:#D9ECE3;color:#0C4A31;border-radius:12px;padding:12px 14px;font-size:15px}
+.tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;background:#E4E7E1;border-radius:14px;padding:4px}
+.tabs button{min-height:44px;border:0;border-radius:10px;background:transparent;font-weight:600}
+.tabs button[aria-pressed="true"]{background:#fff}
+.linkrow{display:flex;justify-content:center}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+'use strict';
+const SB_URL='https://unrrfetfaqoakabluorx.supabase.co';
+const SB_KEY='sb_publishable_i4ESt4cJsyYkTl4p2T8YXg_lTw93DW4';
+
+const LANGS=[['uz','Oʻzbek'],['kaa','Qaraqalpaq'],['tk','Türkmen'],['ru','Русский']];
+const CATS={
+ roofer:{ru:'Кровельщик',uz:'Tom yopuvchi',tk:'Üçekçi',kaa:'Tóbe jabıwshı',i:'<path d="M3 12l9-8 9 8"/><path d="M6 10v9h12v-9"/>'},
+ mason:{ru:'Кладчик',uz:'Gʻisht teruvchi',tk:'Kerpiç örüji',kaa:'Gerbish qalawshı',i:'<rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 9.700h18M3 14.300h18M9 5v4.700M15 9.700v4.600M9 14.300V19"/>'},
+ tiler:{ru:'Кафельщик',uz:'Kafelchi',tk:'Kafelçi',kaa:'Kafelshi',i:'<rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/>'},
+ carpenter:{ru:'Плотник',uz:'Duradgor',tk:'Agaç ussasy',kaa:'Aǵash ustası',i:'<path d="M14 4l6 6-3 3-6-6z"/><path d="M12.500 8.500L4 17v3h3l8.500-8.500"/>'},
+ concrete:{ru:'Бетонщик',uz:'Betonchi',tk:'Betonçy',kaa:'Betonshı',i:'<path d="M5 9h14l-2 11H7z"/><path d="M7 9a5 5 0 0110 0"/>'},
+ electrician:{ru:'Электрик',uz:'Elektrik',tk:'Elektrik',kaa:'Elektrik',i:'<path d="M13 3L5 13h6l-1 8 8-10h-6z"/>'},
+ plumber:{ru:'Сантехник',uz:'Santexnik',tk:'Santehnik',kaa:'Santexnik',i:'<path d="M12 3c3.500 4.500 6 7.500 6 11a6 6 0 01-12 0c0-3.500 2.500-6.500 6-11z"/>'},
+ welder:{ru:'Сварщик',uz:'Payvandchi',tk:'Kebşirleýji',kaa:'Kepserlewshi',i:'<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.500 2.500M15.500 15.500L18 18M18 6l-2.500 2.500M8.500 15.500L6 18"/>'},
+ plasterer:{ru:'Штукатур',uz:'Suvoqchi',tk:'Suwagçy',kaa:'Sıbawshı',i:'<path d="M4 8l9-4 7 7-4 9z"/><path d="M4 8l12 12"/>'},
+ painter:{ru:'Маляр',uz:'Boʻyoqchi',tk:'Reňkleýji',kaa:'Boyawshı',i:'<rect x="4" y="4" width="14" height="6" rx="2"/><path d="M18 7h2v5h-8v3"/><rect x="10.500" y="15" width="3" height="6" rx="1"/>'}
+};
+const T={
+ru:{city:'Турткуль',who:'Кого вы ищете?',search:'Найти мастера или услугу',ctaT:'Вы мастер?',ctaS:'Добавьте профиль — заказчики найдут вас сами',ctaMe:'Мой профиль мастера',ctaMeS:'Изменить данные',back:'Назад',empty:'В этом разделе пока нет мастеров',emptyS:'Ничего не найдено',exp:n=>'стаж: '+n+' лет',about:'О себе и услугах',call:'Позвонить',copy:'Скопировать номер',copied:'Номер скопирован',reg:'Регистрация',login:'Вход',name:'Имя и фамилия',namePh:'Как вас зовут',phone:'Номер телефона',phoneH:'На этот номер будут звонить заказчики',pass:'Пароль',passH:'Не меньше 6 символов',spec:'Специальность',district:'Район',districtPh:'Город, махалля или село',aboutPh:'Что делаете, цены, график',expL:'Стаж, лет',create:'Создать профиль',enter:'Войти',save:'Сохранить',saved:'Сохранено',logout:'Выйти',del:'Удалить профиль',delQ:'Удалить профиль навсегда?',delYes:'Да, удалить',cancel:'Отмена',profile:'Профиль мастера',mine:'Мой профиль',view:'Как видят заказчики',load:'Загрузка…',results:'Результаты поиска',
+ e_phone_exists:'Этот номер уже зарегистрирован. Войдите с паролем.',e_wrong:'Неверный номер или пароль',e_locked:'Слишком много попыток. Попробуйте через 15 минут.',e_bad_password:'Пароль — от 6 символов',e_bad_input:'Проверьте поля: имя и номер обязательны',e_phone:'Введите номер полностью, например +998 90 123 45 67',e_net:'Нет связи с сервером. Проверьте интернет и повторите.',e_no_session:'Войдите заново',e_notfound:'Мастер не найден'},
+uz:{city:'Toʻrtkoʻl',who:'Kimni qidiryapsiz?',search:'Usta yoki xizmatni toping',ctaT:'Ustamisiz?',ctaS:'Profil qoʻshing — buyurtmachilar sizni oʻzi topadi',ctaMe:'Mening usta profilim',ctaMeS:'Maʼlumotlarni oʻzgartirish',back:'Orqaga',empty:'Bu boʻlimda hozircha ustalar yoʻq',emptyS:'Hech narsa topilmadi',exp:n=>'staj: '+n+' yil',about:'Oʻzi va xizmatlari haqida',call:'Qoʻngʻiroq qilish',copy:'Raqamni nusxalash',copied:'Raqam nusxalandi',reg:'Roʻyxatdan oʻtish',login:'Kirish',name:'Ism va familiya',namePh:'Ismingiz',phone:'Telefon raqami',phoneH:'Buyurtmachilar shu raqamga qoʻngʻiroq qiladi',pass:'Parol',passH:'Kamida 6 ta belgi',spec:'Mutaxassislik',district:'Hudud',districtPh:'Shahar, mahalla yoki qishloq',aboutPh:'Nima ish qilasiz, narxlar, ish vaqti',expL:'Ish staji, yil',create:'Profil yaratish',enter:'Kirish',save:'Saqlash',saved:'Saqlandi',logout:'Chiqish',del:'Profilni oʻchirish',delQ:'Profil butunlay oʻchirilsinmi?',delYes:'Ha, oʻchirish',cancel:'Bekor qilish',profile:'Usta profili',mine:'Mening profilim',view:'Buyurtmachilar qanday koʻradi',load:'Yuklanmoqda…',results:'Qidiruv natijalari',
+ e_phone_exists:'Bu raqam roʻyxatdan oʻtgan. Parol bilan kiring.',e_wrong:'Raqam yoki parol notoʻgʻri',e_locked:'Urinishlar juda koʻp. 15 daqiqadan soʻng urinib koʻring.',e_bad_password:'Parol kamida 6 ta belgi',e_bad_input:'Maydonlarni tekshiring: ism va raqam shart',e_phone:'Raqamni toʻliq kiriting, masalan +998 90 123 45 67',e_net:'Server bilan aloqa yoʻq. Internetni tekshirib, qayta urining.',e_no_session:'Qaytadan kiring',e_notfound:'Usta topilmadi'},
+tk:{city:'Türtkül',who:'Kimi gözleýärsiňiz?',search:'Ussa ýa-da hyzmat gözle',ctaT:'Siz ussamy?',ctaS:'Profil goşuň — müşderiler sizi özleri tapar',ctaMe:'Meniň ussa profilim',ctaMeS:'Maglumatlary üýtgetmek',back:'Yza',empty:'Bu bölümde entek ussa ýok',emptyS:'Hiç zat tapylmady',exp:n=>'iş tejribesi: '+n+' ýyl',about:'Özi we hyzmatlary barada',call:'Jaň etmek',copy:'Belgini göçürmek',copied:'Belgi göçürildi',reg:'Hasaba durmak',login:'Girmek',name:'Ady we familiýasy',namePh:'Adyňyz',phone:'Telefon belgisi',phoneH:'Müşderiler şu belgä jaň eder',pass:'Parol',passH:'Azyndan 6 belgi',spec:'Hünäri',district:'Ýeri',districtPh:'Şäher, mähelle ýa-da oba',aboutPh:'Näme iş edýärsiňiz, bahalar, iş wagty',expL:'Iş tejribesi, ýyl',create:'Profil döretmek',enter:'Girmek',save:'Ýatda saklamak',saved:'Saklandy',logout:'Çykmak',del:'Profili pozmak',delQ:'Profil hemişelik pozulsynmy?',delYes:'Hawa, pozmak',cancel:'Goýbolsun',profile:'Ussanyň profili',mine:'Meniň profilim',view:'Müşderiler nähili görýär',load:'Ýüklenýär…',results:'Gözleg netijeleri',
+ e_phone_exists:'Bu belgi eýýäm hasaba alnan. Parol bilen giriň.',e_wrong:'Belgi ýa-da parol nädogry',e_locked:'Synanyşyk gaty köp. 15 minutdan soň synanyşyň.',e_bad_password:'Parol azyndan 6 belgi',e_bad_input:'Meýdanlary barlaň: at we belgi hökman',e_phone:'Belgini doly ýazyň, mysal üçin +998 90 123 45 67',e_net:'Serwer bilen aragatnaşyk ýok. Interneti barlap, gaýtadan synanyşyň.',e_no_session:'Täzeden giriň',e_notfound:'Ussa tapylmady'},
+kaa:{city:'Tórtkúl',who:'Kimdi izlep atırsız?',search:'Usta yamasa xızmet izlew',ctaT:'Ustasız ba?',ctaS:'Profil qosıń — buyırtpashılar sizdi ózleri tabadı',ctaMe:'Meniń usta profilim',ctaMeS:'Maǵlıwmatlardı ózgertiw',back:'Artqa',empty:'Bul bólimde házirshe ustalar joq',emptyS:'Hesh nárse tabılmadı',exp:n=>'staj: '+n+' jıl',about:'Ózi hám xızmetleri haqqında',call:'Qońıraw etiw',copy:'Nomerdi kóshiriw',copied:'Nomer kóshirildi',reg:'Dizimnen ótiw',login:'Kiriw',name:'Atı hám familiyası',namePh:'Atıńız',phone:'Telefon nomeri',phoneH:'Buyırtpashılar usı nomerge qońıraw etedi',pass:'Parol',passH:'Keminde 6 belgi',spec:'Qánigeligi',district:'Aymaq',districtPh:'Qala, máhálle yamasa awıl',aboutPh:'Qanday jumıs isleysiz, bahalar, jumıs waqtı',expL:'Is stajı, jıl',create:'Profil jaratıw',enter:'Kiriw',save:'Saqlaw',saved:'Saqlandı',logout:'Shıǵıw',del:'Profildi óshiriw',delQ:'Profil pútkilley óshirilsin be?',delYes:'Awa, óshiriw',cancel:'Biykarlaw',profile:'Usta profili',mine:'Meniń profilim',view:'Buyırtpashılar qalay kóredi',load:'Júklenbekte…',results:'Izlew nátiyjeleri',
+ e_phone_exists:'Bul nomer dizimnen ótken. Parol menen kiriń.',e_wrong:'Nomer yamasa parol qáte',e_locked:'Urınıwlar júdá kóp. 15 minuttan soń urınıp kóriń.',e_bad_password:'Parol keminde 6 belgi',e_bad_input:'Maydanlardı tekseriń: at hám nomer shárt',e_phone:'Nomerdi tolıq kiritiń, mısalı +998 90 123 45 67',e_net:'Server menen baylanıs joq. Internetti tekserip, qaytadan urınıń.',e_no_session:'Qaytadan kiriń',e_notfound:'Usta tabılmadı'}
+};
+
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}}};
+let lang=store.get('usta_lang')||'ru'; if(!T[lang])lang='ru';
+let token=store.get('usta_token');
+const t=k=>T[lang][k]||T.ru[k]||k;
+const catName=s=>CATS[s]?CATS[s][lang]:s;
+
+function h(tag,attrs,...kids){const e=document.createElement(tag);for(const k in attrs||{}){const v=attrs[k];if(v==null||v===false)continue;if(k==='html')e.innerHTML=v;else if(k.startsWith('on'))e.addEventListener(k.slice(2),v);else if(k==='class')e.className=v;else e.setAttribute(k,v===true?'':v)}for(const c of kids.flat()){if(c==null||c===false)continue;e.append(c.nodeType?c:document.createTextNode(c))}return e}
+const svg=(inner,size,stroke)=>h('span',{html:'<svg aria-hidden="true" width="'+(size||24)+'" height="'+(size||24)+'" viewBox="0 0 24 24" fill="none" stroke="'+(stroke||'#14201F')+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+inner+'</svg>',style:'display:flex'});
+const I={back:'<path d="M15 5l-7 7 7 7"/>',next:'<path d="M9 5l7 7-7 7"/>',phone:'<path d="M5 4h4l2 5-2.500 1.500a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/>',search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.500-3.500"/>'};
+
+async function api(path,opts){let r;try{r=await fetch(SB_URL+'/rest/v1/'+path,Object.assign({headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'}},opts))}catch(e){throw new Error('net')}if(!r.ok)throw new Error('net');const txt=await r.text();return txt?JSON.parse(txt):null}
+const rpc=(fn,args)=>api('rpc/'+fn,{method:'POST',body:JSON.stringify(args)});
+const COLS='id,name,phone,category,district,about,experience_years';
+
+function normPhone(v){const d=(v||'').replace(/\D/g,'');if(d.length===9)return '+998'+d;if(d.length>=11&&d.length<=15)return '+'+d;return null}
+function fmtPhone(p){const m=/^\+(998|993)(\d{2})(\d{3})(\d{2})(\d{2})$/.exec(p);if(m)return '+'+m[1]+' '+m[2]+' '+m[3]+' '+m[4]+' '+m[5];const k=/^\+(993)(\d{2})(\d{2})(\d{2})(\d{2})$/.exec(p);return k?'+'+k[1]+' '+k[2]+' '+k[3]+' '+k[4]+' '+k[5]:p}
+const initials=n=>n.trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
+const sub=m=>[catName(m.category),m.experience_years!=null?t('exp')(m.experience_years):null].filter(Boolean).join(' · ');
+
+const app=document.getElementById('app');
+const go=hash=>{location.hash=hash};
+function langBar(){return h('div',{class:'langs',role:'group','aria-label':'Til / Язык'},LANGS.map(([c,n])=>h('button',{class:'chip',type:'button','aria-pressed':String(c===lang),onclick:()=>{lang=c;store.set('usta_lang',c);document.documentElement.lang=c==='kaa'?'kaa':c;render()}},n)))}
+function header(title,backTo){return h('div',{class:'top'},h('div',{class:'row'},h('a',{class:'back',href:backTo,'aria-label':t('back')},svg(I.back,22,'#fff')),h('h1',{},title)))}
+function masterCard(m){return h('div',{class:'card'},h('a',{class:'info',href:'#/m/'+m.id},h('span',{class:'ava'},initials(m.name)),h('span',{class:'txt'},h('b',{},m.name),h('span',{},sub(m)),m.district?h('span',{},m.district):null)),h('a',{class:'call-round',href:'tel:'+m.phone,'aria-label':t('call')+': '+m.name},svg(I.phone,22,'#fff')))}
+const loading=()=>h('p',{class:'muted center'},t('load'));
+const errBox=k=>h('div',{class:'err',role:'alert'},t('e_'+k));
+
+function viewHome(){
+ const input=h('input',{id:'q',type:'search',placeholder:t('search'),'aria-label':t('search'),enterkeyhint:'search'});
+ const form=h('form',{class:'search',role:'search',onsubmit:e=>{e.preventDefault();const q=input.value.trim();if(q)go('#/s/'+encodeURIComponent(q))}},svg(I.search,20,'#56625F'),input);
+ form.style.flexDirection='row';
+ app.replaceChildren(
+  h('div',{class:'top'},h('div',{class:'row between'},h('div',{class:'row'},h('div',{class:'logo'},'U'),h('div',{class:'brand'},'Usta')),h('div',{class:'city'},t('city'))),langBar(),form),
+  h('main',{},h('h2',{},t('who')),h('div',{class:'grid'},Object.keys(CATS).map(s=>h('a',{class:'cat',href:'#/c/'+s},h('span',{class:'ico'},svg(CATS[s].i)),h('span',{},catName(s))))),
+   h('a',{class:'cta',href:'#/me'},h('span',{},h('b',{},token?t('ctaMe'):t('ctaT')),h('small',{},token?t('ctaMeS'):t('ctaS'))),svg(I.next)))
+ );
+}
+async function viewList(slug,query){
+ const box=h('main',{},loading());
+ app.replaceChildren(header(query!=null?t('results'):catName(slug),'#/'),box);
+ try{
+  let rows;
+  if(query!=null){
+   const all=await api('masters?select='+COLS+'&order=created_at.desc&limit=1000');const q=query.toLowerCase();
+   rows=all.filter(m=>[m.name,m.about,m.district].concat(CATS[m.category]?['ru','uz','tk','kaa'].map(l=>CATS[m.category][l]):[]).some(v=>(v||'').toLowerCase().includes(q)));
+  }else rows=await api('masters?select='+COLS+'&category=eq.'+encodeURIComponent(slug)+'&order=created_at.desc&limit=500');
+  box.replaceChildren(...(rows.length?rows.map(masterCard):[h('p',{class:'muted center'},query!=null?t('emptyS'):t('empty')),query==null?h('a',{class:'cta',href:'#/me',style:'margin-top:8px'},h('span',{},h('b',{},t('ctaT')),h('small',{},t('ctaS'))),svg(I.next)):null]));
+ }catch(e){box.replaceChildren(errBox('net'))}
+}
+function profileBody(m){
+ const note=h('div',{class:'hint center','aria-live':'polite'});
+ return [h('main',{},m.about?h('div',{class:'panel'},h('h3',{},t('about')),h('p',{},m.about)):null),
+  h('div',{class:'bar'},h('a',{class:'btn green',href:'tel:'+m.phone},svg(I.phone,22,'#fff'),t('call')),h('div',{class:'phone'},fmtPhone(m.phone)),
+   h('button',{class:'btn ghost',type:'button',onclick:async()=>{try{await navigator.clipboard.writeText(m.phone);note.textContent=t('copied')}catch(e){note.textContent=fmtPhone(m.phone)}}},t('copy')),note)];
+}
+async function viewMaster(id){
+ app.replaceChildren(header(t('profile'),'#/'),h('main',{},loading()));
+ try{
+  const rows=await api('masters?select='+COLS+'&id=eq.'+encodeURIComponent(id));
+  if(!rows.length){app.replaceChildren(header(t('profile'),'#/'),h('main',{},errBox('notfound')));return}
+  const m=rows[0];
+  app.replaceChildren(h('div',{class:'top'},h('a',{class:'back',href:'#/c/'+m.category,'aria-label':t('back')},svg(I.back,22,'#fff')),
+   h('div',{class:'hero'},h('div',{class:'ava'},initials(m.name)),h('div',{class:'txt'},h('h1',{},m.name),h('div',{class:'sub'},sub(m)),m.district?h('div',{class:'sub'},m.district):null))),...profileBody(m));
+ }catch(e){app.replaceChildren(header(t('profile'),'#/'),h('main',{},errBox('net')))}
+}
+function field(id,label,el,hint){return h('div',{class:'f'},h('label',{for:id},label),el,hint?h('div',{class:'hint'},hint):null)}
+function catSelect(val){return h('select',{id:'f-cat',required:true},Object.keys(CATS).map(s=>h('option',{value:s,selected:s===val},catName(s))))}
+function expVal(v){const n=parseInt(v,10);return Number.isFinite(n)&&n>=0&&n<=70?n:null}
+
+let authMode='reg';
+function viewAuth(){
+ const msg=h('div',{'aria-live':'polite'});
+ const name=h('input',{id:'f-name',type:'text',maxlength:80,placeholder:t('namePh'),autocomplete:'name',required:true});
+ const phone=h('input',{id:'f-phone',type:'tel',placeholder:'+998 90 123 45 67',autocomplete:'tel',required:true});
+ const pass=h('input',{id:'f-pass',type:'password',minlength:6,maxlength:72,autocomplete:authMode==='reg'?'new-password':'current-password',required:true});
+ const cat=catSelect();const district=h('input',{id:'f-district',type:'text',maxlength:80,placeholder:t('districtPh')});
+ const exp=h('input',{id:'f-exp',type:'number',min:0,max:70,inputmode:'numeric'});
+ const about=h('textarea',{id:'f-about',maxlength:600,placeholder:t('aboutPh')});
+ const submit=h('button',{class:'btn yellow',type:'submit'},authMode==='reg'?t('create'):t('enter'));
+ const reg=authMode==='reg';
+ const form=h('form',{novalidate:true,onsubmit:async e=>{e.preventDefault();msg.replaceChildren();
+   const p=normPhone(phone.value);if(!p){msg.replaceChildren(errBox('phone'));return}
+   if(pass.value.length<6){msg.replaceChildren(errBox('bad_password'));return}
+   if(reg&&name.value.trim().length<2){msg.replaceChildren(errBox('bad_input'));return}
+   submit.disabled=true;
+   try{const r=reg?await rpc('register_master',{p_name:name.value,p_phone:p,p_password:pass.value,p_category:cat.value,p_district:district.value,p_about:about.value,p_experience:expVal(exp.value)}):await rpc('login_master',{p_phone:p,p_password:pass.value});
+    if(r.error){msg.replaceChildren(errBox(r.error));submit.disabled=false;return}
+    token=r.token;store.set('usta_token',token);render();
+   }catch(err){msg.replaceChildren(errBox('net'));submit.disabled=false}}},
+  reg?field('f-name',t('name'),name):null,field('f-phone',t('phone'),phone,reg?t('phoneH'):null),field('f-pass',t('pass'),pass,reg?t('passH'):null),
+  reg?field('f-cat',t('spec'),cat):null,reg?field('f-district',t('district'),district):null,reg?field('f-exp',t('expL'),exp):null,reg?field('f-about',t('about'),about):null,msg,submit);
+ const tab=(m,l)=>h('button',{type:'button','aria-pressed':String(authMode===m),onclick:()=>{authMode=m;viewAuth()}},l);
+ app.replaceChildren(header(t('profile'),'#/'),h('main',{},h('div',{class:'tabs'},tab('reg',t('reg')),tab('login',t('login'))),form));
+}
+async function viewMe(){
+ if(!token){viewAuth();return}
+ app.replaceChildren(header(t('mine'),'#/'),h('main',{},loading()));
+ let m;try{m=await rpc('my_master',{p_token:token})}catch(e){app.replaceChildren(header(t('mine'),'#/'),h('main',{},errBox('net')));return}
+ if(!m){token=null;store.set('usta_token',null);viewAuth();return}
+ const msg=h('div',{'aria-live':'polite'});
+ const name=h('input',{id:'f-name',type:'text',maxlength:80,value:m.name,required:true});
+ const cat=catSelect(m.category);const district=h('input',{id:'f-district',type:'text',maxlength:80,value:m.district,placeholder:t('districtPh')});
+ const exp=h('input',{id:'f-exp',type:'number',min:0,max:70,inputmode:'numeric',value:m.experience_years!=null?m.experience_years:''});
+ const about=h('textarea',{id:'f-about',maxlength:600,placeholder:t('aboutPh')},m.about);
+ const save=h('button',{class:'btn yellow',type:'submit'},t('save'));
+ const delBox=h('div',{});
+ const askDel=()=>delBox.replaceChildren(h('div',{class:'panel'},h('b',{},t('delQ')),h('button',{class:'btn danger',type:'button',onclick:async()=>{try{const r=await rpc('delete_master',{p_token:token});if(r&&r.error)throw 0;token=null;store.set('usta_token',null);go('#/')}catch(e){msg.replaceChildren(errBox('net'))}}},t('delYes')),h('button',{class:'btn ghost',type:'button',onclick:()=>showDel()},t('cancel'))));
+ const showDel=()=>delBox.replaceChildren(h('button',{class:'btn danger',type:'button',onclick:askDel},t('del')));
+ showDel();
+ const form=h('form',{novalidate:true,onsubmit:async e=>{e.preventDefault();msg.replaceChildren();if(name.value.trim().length<2){msg.replaceChildren(errBox('bad_input'));return}save.disabled=true;
+   try{const r=await rpc('update_master',{p_token:token,p_name:name.value,p_category:cat.value,p_district:district.value,p_about:about.value,p_experience:expVal(exp.value)});
+    msg.replaceChildren(r.error?errBox(r.error):h('div',{class:'ok',role:'status'},t('saved')))}catch(err){msg.replaceChildren(errBox('net'))}save.disabled=false}},
+  field('f-name',t('name'),name),h('div',{class:'f'},h('div',{style:'font-size:14px;font-weight:600'},t('phone')),h('div',{class:'phone',style:'text-align:left'},fmtPhone(m.phone))),
+  field('f-cat',t('spec'),cat),field('f-district',t('district'),district),field('f-exp',t('expL'),exp),field('f-about',t('about'),about),msg,save);
+ app.replaceChildren(header(t('mine'),'#/'),h('main',{},form,h('a',{class:'btn ghost',href:'#/m/'+m.id},t('view')),
+  h('button',{class:'btn ghost',type:'button',onclick:async()=>{const tk=token;token=null;store.set('usta_token',null);try{await rpc('logout_master',{p_token:tk})}catch(e){}go('#/')}},t('logout')),delBox));
+}
+function render(){
+ const p=location.hash.replace(/^#\/?/,'').split('/');window.scrollTo(0,0);
+ if(p[0]==='c'&&CATS[p[1]])viewList(p[1]);
+ else if(p[0]==='s'&&p[1]){let q=p.slice(1).join('/');try{q=decodeURIComponent(q)}catch(e){}viewList(null,q)}
+ else if(p[0]==='m'&&p[1])viewMaster(p[1]);
+ else if(p[0]==='me')viewMe();
+ else viewHome();
+}
+window.addEventListener('hashchange',render);
+document.documentElement.lang=lang;
+render();
+</script>
+</body>
+</html>

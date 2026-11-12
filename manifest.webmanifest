@@ -1,0 +1,10 @@
+{
+  "name": "Usta — мастера Турткуля",
+  "short_name": "Usta",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F2F3EF",
+  "theme_color": "#14201F",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

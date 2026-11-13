@@ -170,3 +170,49 @@ tk:{
 }};
 for(const l in X){Object.assign(T[l],X[l]);T[l].ago=ago[l];}
 })();
+// Тексты v3.1: занят/свободен, жалобы, подробная оценка, продвижение
+(function(){
+const X={
+ru:{free:'Свободен',busy:'Занят',statusL:'Мой статус',statusS:'Заказчики видят ваш статус в каталоге. Свободные мастера показываются выше.',top:'ТОП',
+ outOf5:'из 5',reviewsN:n=>n+' '+(n%10===1&&n%100!==11?'отзыв':(n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?'отзыва':'отзывов')),
+ q_quality:'Качество работы',q_time:'Пунктуальность',q_price:'Честная цена',q_polite:'Вежливость',overall:'Общая оценка',detailRate:'Оцените по пунктам',
+ complain:'Пожаловаться',complainT:'Жалоба на мастера',complainS:'Администратор проверит жалобу. Мастер не увидит, кто её отправил.',reasonL:'Что случилось?',
+ r_no_show:'Не пришёл',r_rude:'Грубость',r_price:'Обман с ценой',r_quality:'Плохое качество',r_fraud:'Мошенничество',r_other:'Другое',complainPh:'Опишите, что произошло',
+ complainSend:'Отправить жалобу',complainOk:'Жалоба отправлена. Администратор рассмотрит её.',e_complaint_open:'Вы уже отправили жалобу на этого мастера, она рассматривается',e_complaint_text:'Опишите, что произошло',
+ tabComplaints:'Жалобы',noComplaints:'Жалоб нет',resolve:'Рассмотрена',resolvedL:'рассмотрена',openL:'новая',fromL:'От',complaintsN:n=>'Жалоб: '+n,
+ boostT:'Продвижение',boostS:'Ваш профиль будет первым в каталоге вашего района со значком «ТОП», а ваши отклики — выше других.',boost7:'7 дней',boost30:'30 дней',
+ boostActive:d=>'ТОП до '+d,boostBuy:'Купить продвижение',e_pay_pending:'У вас уже есть оплата на проверке. Дождитесь подтверждения.',e_no_price:'Цена ещё не задана администратором',
+ priceB7:'Продвижение 7 дней, сум',priceB30:'Продвижение 30 дней, сум',payFor:'Оплатить',choosePlan:'Выберите и оплатите'},
+uz:{free:'Boş',busy:'Band',statusL:'Mening holatim',statusS:'Buyurtmaçilar katalogda holatingizni köradi. Boş ustalar yuqorida körsatiladi.',top:'TOP',
+ outOf5:'/ 5',reviewsN:n=>n+' ta şarh',
+ q_quality:'Iş sifati',q_time:'Öz vaqtida kelişi',q_price:'Halol narx',q_polite:'Xuşmuomalalik',overall:'Umumiy baho',detailRate:'Bandlar böyiça baholang',
+ complain:'Şikoyat qiliş',complainT:'Usta ustidan şikoyat',complainS:'Administrator şikoyatni tekşiradi. Usta kim yuborganini körmaydi.',reasonL:'Nima böldi?',
+ r_no_show:'Kelmadi',r_rude:'Qöpollik',r_price:'Narxda aldaş',r_quality:'Sifatsiz iş',r_fraud:'Firibgarlik',r_other:'Boşqa',complainPh:'Nima bölganini yozing',
+ complainSend:'Şikoyat yuboriş',complainOk:'Şikoyat yuborildi. Administrator köribçiqadi.',e_complaint_open:'Bu usta ustidan şikoyatingiz köribçiqilmoqda',e_complaint_text:'Nima bölganini yozing',
+ tabComplaints:'Şikoyatlar',noComplaints:'Şikoyatlar yöq',resolve:'Köribçiqildi',resolvedL:'köribçiqilgan',openL:'yangi',fromL:'Kimdan',complaintsN:n=>'Şikoyatlar: '+n,
+ boostT:'Reklama',boostS:'Profilingiz hududingiz katalogida «TOP» belgisi bilan birinçi körinadi, javoblaringiz esa boşqalardan yuqorida.',boost7:'7 kun',boost30:'30 kun',
+ boostActive:d=>'TOP '+d+' gaça',boostBuy:'Reklama sotib oliş',e_pay_pending:'Sizda tekşiruvdagi tölov bor. Tasdiqlanişini kuting.',e_no_price:'Narx hali administrator tomonidan belgilanmagan',
+ priceB7:'Reklama 7 kun, söm',priceB30:'Reklama 30 kun, söm',payFor:'Tölaş',choosePlan:'Tanlang va tölang'},
+kaa:{free:'Bos',busy:'Bánt',statusL:'Meniń jaǵdayım',statusS:'Buyırtpashılar katalogta jaǵdayıńızdı kóredi. Bos ustalar joqarıda kórsetiledi.',top:'TOP',
+ outOf5:'/ 5',reviewsN:n=>n+' pikir',
+ q_quality:'Jumıs sapası',q_time:'Óz waqtında keliwi',q_price:'Ádil baha',q_polite:'Sıpayılıq',overall:'Ulıwma baha',detailRate:'Bántler boyınsha bahalań',
+ complain:'Shaǵım etiw',complainT:'Usta ústinen shaǵım',complainS:'Administrator shaǵımdı tekseredi. Usta kim jibergenin kórmeydi.',reasonL:'Ne boldı?',
+ r_no_show:'Kelmedi',r_rude:'Qopallıq',r_price:'Bahada aldaw',r_quality:'Sapasız jumıs',r_fraud:'Alayaqlıq',r_other:'Basqa',complainPh:'Ne bolǵanın jazıń',
+ complainSend:'Shaǵım jiberiw',complainOk:'Shaǵım jiberildi. Administrator kórip shıǵadı.',e_complaint_open:'Bul usta ústinen shaǵımıńız kórip shıǵılmaqta',e_complaint_text:'Ne bolǵanın jazıń',
+ tabComplaints:'Shaǵımlar',noComplaints:'Shaǵımlar joq',resolve:'Kórip shıǵıldı',resolvedL:'kórip shıǵılǵan',openL:'jańa',fromL:'Kimnen',complaintsN:n=>'Shaǵımlar: '+n,
+ boostT:'Reklama',boostS:'Profilińiz aymaǵıńız katalogında «TOP» belgisi menen birinshi kórinedi, juwaplarıńız basqalardan joqarıda.',boost7:'7 kún',boost30:'30 kún',
+ boostActive:d=>'TOP '+d+' shekem',boostBuy:'Reklama satıp alıw',e_pay_pending:'Sizde tekseriwdegi tólem bar. Tastıyıqlanıwın kútiń.',e_no_price:'Baha ele administrator tárepinen belgilenbegen',
+ priceB7:'Reklama 7 kún, sum',priceB30:'Reklama 30 kún, sum',payFor:'Tólew',choosePlan:'Tańlań hám tóleń'},
+tk:{free:'Boş',busy:'Meşgul',statusL:'Meniň ýagdaýym',statusS:'Müşderiler katalogda ýagdaýyňyzy görýär. Boş ussalar ýokarda görkezilýär.',top:'TOP',
+ outOf5:'/ 5',reviewsN:n=>n+' syn',
+ q_quality:'Işiň hili',q_time:'Wagtynda gelmegi',q_price:'Adalatly baha',q_polite:'Sypaýylyk',overall:'Umumy baha',detailRate:'Bentler boýunça baha beriň',
+ complain:'Şikaýat etmek',complainT:'Ussa barada şikaýat',complainS:'Administrator şikaýaty barlar. Ussa kimiň iberendigini görmeýär.',reasonL:'Näme boldy?',
+ r_no_show:'Gelmedi',r_rude:'Gödeklik',r_price:'Bahada aldaw',r_quality:'Hilsiz iş',r_fraud:'Galplyk',r_other:'Başga',complainPh:'Näme bolandygyny ýazyň',
+ complainSend:'Şikaýat ibermek',complainOk:'Şikaýat iberildi. Administrator sereder.',e_complaint_open:'Bu ussa barada şikaýatyňyza seredilýär',e_complaint_text:'Näme bolandygyny ýazyň',
+ tabComplaints:'Şikaýatlar',noComplaints:'Şikaýat ýok',resolve:'Seredildi',resolvedL:'seredildi',openL:'täze',fromL:'Kimden',complaintsN:n=>'Şikaýatlar: '+n,
+ boostT:'Mahabat',boostS:'Profiliňiz etrabyňyzyň katalogynda «TOP» belgisi bilen birinji görner, jogaplaryňyz bolsa beýlekilerden ýokarda.',boost7:'7 gün',boost30:'30 gün',
+ boostActive:d=>'TOP '+d+' çenli',boostBuy:'Mahabat satyn almak',e_pay_pending:'Sizde barlagdaky töleg bar. Tassyklanmagyna garaşyň.',e_no_price:'Baha entek administrator tarapyndan kesgitlenmedi',
+ priceB7:'Mahabat 7 gün, som',priceB30:'Mahabat 30 gün, som',payFor:'Tölemek',choosePlan:'Saýlaň we töläň'}
+};
+for(const l in X)Object.assign(T[l],X[l]);
+})();

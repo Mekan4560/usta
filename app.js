@@ -31,7 +31,7 @@ const NI={home:'<path d="M12 2.600 2 11h3v9.400h5.200v-6h3.600v6H19V11h3z"/>',re
 // ===== сеть
 async function api(path,opts){let r;try{r=await fetch(SB_URL+'/rest/v1/'+path,Object.assign({headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'}},opts))}catch(e){throw new Error('net')}if(!r.ok)throw new Error('net');const txt=await r.text();return txt?JSON.parse(txt):null}
 const rpc=(fn,args)=>api('rpc/'+fn,{method:'POST',body:JSON.stringify(args)});
-const COLS='id,name,phone,category,district,about,experience_years,rating_sum,rating_count,region,place,verified,created_at';
+const COLS='id,name,phone,category,district,about,experience_years,rating_sum,rating_count,region,place,verified,created_at,busy,boost_until';
 const rate=m=>m.rating_count>0?'★ '+(m.rating_sum/m.rating_count).toFixed(1).replace('.',',')+' ('+m.rating_count+')':null;
 function normPhone(v){const d=(v||'').replace(/\D/g,'');if(d.length===9)return '+998'+d;if(d.length>=11&&d.length<=15)return '+'+d;return null}
 function fmtPhone(p){const m=/^\+(998|993)(\d{2})(\d{3})(\d{2})(\d{2})$/.exec(p||'');if(m)return '+'+m[1]+' '+m[2]+' '+m[3]+' '+m[4]+' '+m[5];return p||''}
@@ -40,6 +40,7 @@ const sub=m=>[catName(m.category),m.experience_years!=null?t('exp')(m.experience
 const money=v=>String(v||'0').replace(/\D/g,'').replace(/\B(?=(\d{3})+(?!\d))/g,' ');
 const fmtDate=d=>new Date(d).toLocaleDateString(lang==='ru'?'ru-RU':'uz-UZ',{day:'numeric',month:'long'}).replace(/^(\d+)-/,'$1 ');
 function ago(d){const s=(Date.now()-new Date(d).getTime())/1000,A=t('ago');if(s<90)return A.now;if(s<3600)return A.m(Math.round(s/60));if(s<86400)return A.h(Math.round(s/3600));return A.d(Math.round(s/86400))}
+const boosted=m=>!!(m&&m.boost_until&&new Date(m.boost_until)>Date.now());
 const isNewM=m=>!m.verified&&(m.rating_count||0)===0&&m.created_at&&(Date.now()-new Date(m.created_at).getTime())<30*864e5;
 
 // ===== общие элементы
@@ -54,7 +55,10 @@ function catSelect(val,id){return h('select',{id:id||'f-cat',required:true},val?
 function expVal(v){const n=parseInt(v,10);return Number.isFinite(n)&&n>=0&&n<=70?n:null}
 const badgeV=()=>h('span',{class:'badge b-g'},'✓ '+t('verified'));
 const badgeN=()=>h('span',{class:'badge b-b'},t('isNew'));
-function masterCard(m){return h('div',{class:'card'},h('a',{class:'info',href:'#/m/'+m.id},h('span',{class:'ava'},initials(m.name)),h('span',{class:'txt'},h('b',{},m.name,' ',m.verified?badgeV():(isNewM(m)?badgeN():null)),h('span',{},sub(m)),where(m)?h('span',{},where(m)):null,rate(m)?h('span',{class:'rate'},rate(m)):null)),h('a',{class:'call-round',href:'tel:'+m.phone,'aria-label':t('call')+': '+m.name,onclick:()=>logEv(m.id,'call')},svg(I.phone,22,'#fff')))}
+const badgeTop=()=>h('span',{class:'badge b-top'},'★ '+t('top'));
+const statusChip=m=>h('span',{class:'stat-chip '+(m.busy?'is-busy':'is-free')},m.busy?t('busy'):t('free'));
+const rankSort=rows=>rows.map((m,i)=>[m,i]).sort((a,b)=>(boosted(b[0])-boosted(a[0]))||((a[0].busy?1:0)-(b[0].busy?1:0))||(a[1]-b[1])).map(x=>x[0]);
+function masterCard(m){return h('div',{class:'card'+(boosted(m)?' topcard':'')},h('a',{class:'info',href:'#/m/'+m.id},h('span',{class:'ava'},initials(m.name)),h('span',{class:'txt'},h('b',{},m.name,' ',boosted(m)?badgeTop():null,' ',m.verified?badgeV():(isNewM(m)?badgeN():null)),h('span',{},sub(m)),where(m)?h('span',{},where(m)):null,h('span',{class:'row',style:'gap:8px;flex-wrap:wrap'},statusChip(m),rate(m)?h('span',{class:'rate'},rate(m)):null))),h('a',{class:'call-round',href:'tel:'+m.phone,'aria-label':t('call')+': '+m.name,onclick:()=>logEv(m.id,'call')},svg(I.phone,22,'#fff')))}
 function logEv(id,kind){rpc('log_event',{p_master:id,p_kind:kind}).catch(()=>{})}
 function locFields(rv,pv){
  const rs=h('select',{id:'f-region',required:true},h('option',{value:''},t('choose')),REGIONS.map(r=>h('option',{value:r.k,selected:r.k===rv},regName(r.k))));
@@ -161,6 +165,7 @@ async function viewList(slug,query){
   try{
    let rows=await api('masters?select='+COLS+(query==null?'&category=eq.'+encodeURIComponent(slug):'')+scopes[i].f+'&order=verified.desc,rating_count.desc,created_at.desc&limit=1000');
    if(query!=null){const q=norm(query);rows=rows.filter(m=>{const r=REGIONS.find(x=>x.k===m.region);return [m.name,m.about,m.district,m.place,r&&r.uz,r&&r.ru].concat(CATS[m.category]?['ru','uz','tk','kaa'].map(l=>CATS[m.category][l]):[]).some(v=>norm(v).includes(q))})}
+   rows=rankSort(rows);
    if(query!=null&&!rows.length&&i<scopes.length-1){load(i+1);return}
    set(box,chips,rows.length?rows.map(masterCard):[h('p',{class:'muted center'},query!=null?t('emptyS'):t('empty')),i<scopes.length-1?h('button',{class:'btn ghost',type:'button',onclick:()=>load(i+1)},t('widen')+': '+scopes[i+1].l):null,
     role()!=='master'?h('a',{class:'cta',href:query==null?'#/new/'+slug:'#/new'},h('span',{},h('b',{},t('heroT')),h('small',{},t('heroS'))),svg(I.next)):null]);
@@ -193,10 +198,10 @@ async function viewMaster(id){
  catch(e){shell('home',header(t('profile'),'#/'),h('main',{},errBox('net')));return}
  if(!(token&&me.id===m.id))logEv(m.id,'view');
  const note=h('div',{class:'hint center','aria-live':'polite'});
- const photoBox=h('div',{}),revBox=h('div',{class:'panel'},loading());
+ const photoBox=h('div',{}),revBox=h('div',{class:'panel'},loading()),rateBox=h('div',{});
  set(app,h('div',{class:'top'},h('a',{class:'back',href:'#/c/'+m.category,'aria-label':t('back')},svg(I.back,22,'#fff')),
-   h('div',{class:'hero2'},h('div',{class:'ava big'},initials(m.name)),h('div',{class:'txt'},h('h1',{},m.name),h('div',{class:'sub'},sub(m)),where(m)?h('div',{class:'sub'},where(m)):null,h('div',{class:'row',style:'gap:8px;flex-wrap:wrap'},rate(m)?h('span',{class:'rate y'},rate(m)):null,m.verified?badgeV():(isNewM(m)?badgeN():null))))),
-  h('main',{},h('div',{class:'panel'},h('div',{class:'phone'},fmtPhone(m.phone)),h('button',{class:'btn ghost',type:'button',onclick:()=>copyText(m.phone,note,t('copied'))},t('copy')),note),m.about?h('div',{class:'panel'},h('h3',{},t('about')),h('p',{},m.about)):null,photoBox,revBox),
+   h('div',{class:'hero2'},h('div',{class:'ava big'},initials(m.name)),h('div',{class:'txt'},h('h1',{},m.name),h('div',{class:'sub'},sub(m)),where(m)?h('div',{class:'sub'},where(m)):null,h('div',{class:'row',style:'gap:8px;flex-wrap:wrap'},statusChip(m),boosted(m)?badgeTop():null,m.verified?badgeV():(isNewM(m)?badgeN():null))))),
+  h('main',{},h('div',{class:'panel'},h('div',{class:'phone'},fmtPhone(m.phone)),h('button',{class:'btn ghost',type:'button',onclick:()=>copyText(m.phone,note,t('copied'))},t('copy')),note),m.about?h('div',{class:'panel'},h('h3',{},t('about')),h('p',{},m.about)):null,rateBox,photoBox,revBox,role()!=='master'?h('a',{class:'linkbtn center muted2',href:'#/complain/'+m.id},'⚠ '+t('complain')):null),
   h('div',{class:'bar'},role()!=='master'?h('div',{class:'row'},h('a',{class:'btn green',href:'tel:'+m.phone,onclick:()=>logEv(m.id,'call')},svg(I.phone,22,'#fff'),t('call')),h('a',{class:'btn yellow',href:'#/new/'+m.category,style:'flex:0 0 auto;width:auto'},'+')):h('a',{class:'btn green',href:'tel:'+m.phone},svg(I.phone,22,'#fff'),t('call'))));
  app.classList.remove('withnav');
  const admin=await isAdmin();const mid=encodeURIComponent(m.id);const atok=adminToken||token;
@@ -208,6 +213,27 @@ async function viewMaster(id){
    admin?h('button',{class:'btn danger',type:'button',onclick:async()=>{try{await rpc('admin_delete_review',{p_token:atok,p_id:r.id})}catch(e){}loadReviews()}},t('delS')):null)):h('p',{class:'muted'},t('noReviews')),h('div',{class:'hint'},t('reviewsNote')));
  };
  loadPhotos();loadReviews();
+ try{const R=await rpc('master_rating',{p_master:m.id});if(R&&R.count>0)set(rateBox,ratingPanel(R))}catch(e){}
+}
+const fmt1=v=>v==null?'—':Number(v).toFixed(1).replace('.',',');
+function ratingPanel(R){
+ const max=Math.max(1,...R.dist);
+ return h('div',{class:'panel ratep'},h('div',{class:'row',style:'gap:16px;align-items:center'},h('div',{class:'bigrate'},h('b',{},fmt1(R.avg)),h('span',{},t('outOf5')),h('span',{class:'stars-s','aria-hidden':'true'},'★'.repeat(Math.round(R.avg))+'☆'.repeat(5-Math.round(R.avg))),h('span',{class:'hint'},t('reviewsN')(R.count))),
+   h('div',{class:'dist'},[5,4,3,2,1].map((n,i)=>h('div',{class:'drow'},h('span',{},String(n)),h('span',{class:'dbar'},h('i',{style:'width:'+Math.round(R.dist[i]/max*100)+'%'})),h('span',{class:'dn'},String(R.dist[i])))))),
+  h('div',{class:'crit'},['quality','time','price','polite'].map(k=>R[k]!=null?h('div',{class:'crow'},h('span',{},t('q_'+k)),h('span',{class:'cbar'},h('i',{style:'width:'+Math.round(R[k]/5*100)+'%'})),h('b',{},fmt1(R[k]))):null)));
+}
+
+// ===== жалоба
+let afterLogin=null;
+function viewComplain(mid){
+ if(!ctoken){afterLogin='#/complain/'+mid;go('#/login');return}
+ let reason=null;const msg=h('div',{'aria-live':'polite'});
+ const box=h('div',{class:'col gap'});
+ const draw=()=>set(box,['no_show','rude','price','quality','fraud','other'].map(r=>h('button',{type:'button',class:'plan','aria-pressed':String(reason===r),onclick:()=>{reason=r;draw()}},h('span',{},t('r_'+r)),h('span',{class:'radio'}))));draw();
+ const body=h('textarea',{id:'cmp-body',maxlength:600,placeholder:t('complainPh'),rows:4});
+ const send=h('button',{class:'btn danger solid',type:'button',onclick:async()=>{set(msg);if(!reason){set(msg,errBox('bad_input2'));return}send.disabled=true;
+  try{const r=await rpc('add_complaint',{p_token:ctoken,p_master:mid,p_reason:reason,p_body:body.value});if(r.error){set(msg,errBox(r.error));send.disabled=false;return}set(msg,okBox(t('complainOk')));setTimeout(()=>go('#/m/'+mid),1400)}catch(e){set(msg,errBox('net'));send.disabled=false}}},t('complainSend'));
+ plain(header(t('complainT'),'#/m/'+mid),h('main',{},h('p',{class:'lead'},t('complainS')),h('div',{class:'lab'},t('reasonL')),box,field('cmp-body',t('reviewT'),body),msg),h('div',{class:'bar'},send));
 }
 
 // ===== новая заявка
@@ -272,12 +298,13 @@ function viewClientLogin(){
    try{const r=reg?await rpc('client_register',{p_name:name.value,p_phone:p,p_password:pass.value}):await rpc('client_login',{p_phone:p,p_password:pass.value});
     if(r.error){set(msg,errBox(r.error));submit.disabled=false;return}
     ctoken=r.token;store.set('usta_ctoken',ctoken);await loadMe();refreshBadges();
+    if(afterLogin){const a=afterLogin;afterLogin=null;go(a);return}
     if(draft){const d=draft;const res=await sendRequest(d);if(res&&res.id){draft=null;go('#/r/'+res.id+'/new');return}draft=d;go('#/new');return}
     go('#/req');
    }catch(err){set(msg,errBox('net'));submit.disabled=false}}},
   reg?field('c-name',t('name'),name):null,field('c-phone',t('phone'),phone),field('c-pass',t('pass'),pass,reg?t('passH'):null),msg,submit);
  const tab=(m,l)=>h('button',{type:'button','aria-pressed':String(cauthMode===m),onclick:()=>{cauthMode=m;viewClientLogin()}},l);
- shell('me',header(t('clientLoginT'),draft?'#/new':'#/me'),h('main',{},h('p',{class:'lead'},t('clientLoginS')),h('div',{class:'tabs'},tab('reg',t('reg')),tab('login',t('login'))),form,
+ shell('me',header(t('clientLoginT'),draft?'#/new':(afterLogin?afterLogin.replace('complain','m'):'#/me')),h('main',{},h('p',{class:'lead'},t('clientLoginS')),h('div',{class:'tabs'},tab('reg',t('reg')),tab('login',t('login'))),form,
   h('a',{class:'linkbtn center',href:'#/mreg'},t('asMaster')+' →')));
 }
 
@@ -302,7 +329,7 @@ async function viewReq(id,fresh){
    h('div',{class:'meta'},h('span',{},catName(r.category)),h('span',{},[r.place,r.landmark].filter(Boolean).join(', ')),r.budget?h('span',{},r.budget):null)),
   h('h3',{class:'gh'},t('respondedN')(d.responses.length)),
   d.responses.length?d.responses.map(s=>{const chosen=r.chosen_master===s.master_id;return h('div',{class:'card col'+(chosen?' chosen':'')},
-   h('a',{class:'info',href:'#/m/'+s.master_id},h('span',{class:'ava'},initials(s.name)),h('span',{class:'txt'},h('b',{},s.name,' ',s.verified?badgeV():null),h('span',{},[sub(s),rate(s)].filter(Boolean).join(' · ')))),
+   h('a',{class:'info',href:'#/m/'+s.master_id},h('span',{class:'ava'},initials(s.name)),h('span',{class:'txt'},h('b',{},s.name,' ',boosted(s)?badgeTop():null,' ',s.verified?badgeV():null),h('span',{},[sub(s),rate(s)].filter(Boolean).join(' · ')),h('span',{},statusChip(s)))),
    s.message?h('div',{class:'quote'},'«'+s.message+'»'):null,
    h('div',{class:'row'},h('a',{class:'btn ghost sm',href:'tel:'+s.phone,'aria-label':t('call'),onclick:()=>logEv(s.master_id,'call'),style:'flex:0 0 52px'},svg(I.phone,20)),
     h('a',{class:'btn ghost sm',href:'#/chat/'+id+'/'+s.master_id},t('write'),s.unread?h('span',{class:'nb inline'},String(s.unread)):null),
@@ -314,15 +341,17 @@ async function viewReq(id,fresh){
 // ===== отзыв
 function viewReview(mid){
  if(!ctoken){go('#/login');return}
- let stars=0;const tags=new Set();const msg=h('div',{'aria-live':'polite'});
- const starRow=h('div',{class:'stars big',role:'group','aria-label':t('rating')});
- const drawStars=()=>set(starRow,[1,2,3,4,5].map(n=>h('button',{type:'button',class:'star','aria-pressed':String(n<=stars),'aria-label':t('rating')+' '+n,onclick:()=>{stars=n;drawStars()}},n<=stars?'★':'☆')));drawStars();
+ let stars=0;const q={quality:0,time:0,price:0,polite:0};const tags=new Set();const msg=h('div',{'aria-live':'polite'});
+ const starRow=h('div',{class:'stars big',role:'group','aria-label':t('overall')});
+ const drawStars=()=>set(starRow,[1,2,3,4,5].map(n=>h('button',{type:'button',class:'star','aria-pressed':String(n<=stars),'aria-label':t('overall')+' '+n,onclick:()=>{stars=n;drawStars();for(const k in q)if(!q[k]){q[k]=n}drawCrit()}},n<=stars?'★':'☆')));drawStars();
+ const crit=h('div',{class:'col gap'});
+ const drawCrit=()=>set(crit,Object.keys(q).map(k=>h('div',{class:'critrow'},h('span',{},t('q_'+k)),h('div',{class:'stars sm',role:'group','aria-label':t('q_'+k)},[1,2,3,4,5].map(n=>h('button',{type:'button',class:'star','aria-pressed':String(n<=q[k]),'aria-label':t('q_'+k)+' '+n,onclick:()=>{q[k]=n;drawCrit()}},n<=q[k]?'★':'☆'))))));drawCrit();
  const tagRow=h('div',{class:'row',style:'gap:8px;flex-wrap:wrap'});
  const drawTags=()=>set(tagRow,['time','neat','price','polite'].map(x=>h('button',{type:'button',class:'chip','aria-pressed':String(tags.has(x)),onclick:()=>{tags.has(x)?tags.delete(x):tags.add(x);drawTags()}},t('tag_'+x))));drawTags();
  const body=h('textarea',{id:'rv-body',maxlength:500,placeholder:t('reviewPh')});
  const send=h('button',{class:'btn yellow',type:'button',onclick:async()=>{set(msg);if(!stars){set(msg,errBox('bad_review'));return}send.disabled=true;
-  try{const r=await rpc('add_review_v2',{p_token:ctoken,p_master:mid,p_rating:stars,p_body:body.value,p_tags:[...tags]});if(r.error){set(msg,errBox(r.error));send.disabled=false;return}set(msg,okBox(t('thanks')));setTimeout(()=>go('#/m/'+mid),900)}catch(e){set(msg,errBox('net'));send.disabled=false}}},t('sendReview'));
- shell('req',header(t('howWas'),'#/req'),h('main',{},starRow,tagRow,field('rv-body',t('reviewT'),body),h('div',{class:'hint center'},t('reviewOnly')),msg),h('div',{class:'bar'},send));
+  try{const r=await rpc('add_review_v3',{p_token:ctoken,p_master:mid,p_rating:stars,p_body:body.value,p_tags:[...tags],p_quality:q.quality||null,p_time:q.time||null,p_price:q.price||null,p_polite:q.polite||null});if(r.error){set(msg,errBox(r.error));send.disabled=false;return}set(msg,okBox(t('thanks')));setTimeout(()=>go('#/m/'+mid),900)}catch(e){set(msg,errBox('net'));send.disabled=false}}},t('sendReview'));
+ shell('req',header(t('howWas'),'#/req'),h('main',{},h('div',{class:'lab center'},t('overall')),starRow,h('div',{class:'card col'},h('b',{},t('detailRate')),crit),tagRow,field('rv-body',t('reviewT'),body),h('div',{class:'hint center'},t('reviewOnly')),msg),h('div',{class:'bar'},send));
 }
 
 // ===== чаты
@@ -366,11 +395,18 @@ async function viewChat(rid,mid){
  clearInterval(chatTimer);chatTimer=setInterval(()=>{if(!document.hidden)pull()},4000);
 }
 
+// ===== мастер: статус
+function busyToggle(onChange){
+ const wrap=h('div',{class:'seg2',role:'group','aria-label':t('statusL')});
+ const draw=()=>set(wrap,[false,true].map(b=>h('button',{type:'button','aria-pressed':String(!!me.busy===b),class:b?'b':'f',onclick:async()=>{if(!!me.busy===b)return;const old=me.busy;me.busy=b;draw();try{const r=await rpc('set_busy',{p_token:token,p_on:b});if(r&&r.error)throw 0;onChange&&onChange()}catch(e){me.busy=old;draw()}}},b?t('busy'):t('free'))));
+ draw();return wrap;
+}
+
 // ===== мастер: заявки
 async function viewFeed(){
  if(!token){go('#/mreg');return}
  const box=h('main',{},loading());const chips=h('div',{class:'filters'});
- const top=h('div',{class:'top'},h('div',{class:'row between'},h('h1',{},t('feedT')),h('span',{class:'subpill'})),chips);
+ const top=h('div',{class:'top'},h('div',{class:'row between'},h('h1',{},t('feedT')),h('span',{class:'subpill'})),busyToggle(),chips);
  shell('feed',top,box);
  let d;try{d=await rpc('master_feed',{p_token:token})}catch(e){set(box,errBox('net'));return}
  if(d.error){set(box,errBox(d.error));return}
@@ -408,19 +444,30 @@ async function viewSub(){
  if(st.error){set(box,errBox(st.error));return}
  const until=new Date(st.sub_until),days=Math.max(0,Math.ceil((until-Date.now())/864e5)),active=days>0;
  const total=st.trial?30:Math.max(30,days);
- let plan='m3';const note=h('div',{class:'hint center','aria-live':'polite'});const msg=h('div',{'aria-live':'polite'});
- const plans=h('div',{class:'col gap'});
  const price=k=>parseInt(String(pi&&pi['price_'+k]||'0').replace(/\D/g,''),10)||0;
- const drawPlans=()=>set(plans,['m1','m3'].map(k=>h('button',{type:'button',class:'plan','aria-pressed':String(plan===k),onclick:()=>{plan=k;drawPlans()}},h('span',{},h('b',{},t(k)),k==='m3'?h('span',{class:'badge b-y',style:'margin-left:8px'},t('best')):null),h('span',{class:'p'},price(k)?money(price(k))+' '+t('sum'):'—'))));drawPlans();
- const card=(pi&&pi.card_number||'').trim();
+ let plan=price('m3')?'m3':(price('m1')?'m1':null);
+ const note=h('div',{class:'hint center','aria-live':'polite'});const msg=h('div',{'aria-live':'polite'});
+ const subPlans=h('div',{class:'col gap'}),boostPlans=h('div',{class:'col gap'}),payBtn=h('button',{class:'btn green',type:'button'});
+ const label=k=>(k.startsWith('boost')?t('boostT')+' · ':'')+t(k);
+ const planBtn=k=>h('button',{type:'button',class:'plan','aria-pressed':String(plan===k),disabled:!price(k),onclick:()=>{plan=k;draw()}},h('span',{},h('b',{},t(k)),k==='m3'?h('span',{class:'badge b-y',style:'margin-left:8px'},t('best')):null),h('span',{class:'p'},price(k)?money(price(k))+' '+t('sum'):'—'));
+ const draw=()=>{set(subPlans,['m1','m3'].map(planBtn));set(boostPlans,['boost7','boost30'].map(planBtn));
+  payBtn.disabled=!plan;set(payBtn,plan?t('paidBtn')+' · '+label(plan)+' · '+money(price(plan))+' '+t('sum'):t('choosePlan'))};
+ payBtn.addEventListener('click',async()=>{if(!plan)return;payBtn.disabled=true;set(msg);try{const r=await rpc('pay_claim',{p_token:token,p_plan:plan});if(r.error){set(msg,errBox(r.error));payBtn.disabled=false;return}viewSub()}catch(e){set(msg,errBox('net'));payBtn.disabled=false}});
+ draw();
+ const card=(pi&&pi.card_number||'').trim();const anyPrice=['m1','m3','boost7','boost30'].some(price);
+ const pend=st.pending_payment;
  set(box,h('div',{class:'card col'},h('div',{class:'row between'},h('b',{},st.trial?t('trial'):(active?t('paidSub'):t('expired'))),h('span',{class:'badge '+(active?'b-g':'b-r')},active?t('daysLeft')(days):t('expired'))),
    h('div',{class:'prog'},h('i',{style:'width:'+Math.min(100,Math.round(days/total*100))+'%'})),h('span',{class:'hint'},t('untilD')(fmtDate(until)))),
   h('p',{class:'lead'},t('subWhy')),
-  st.pending_payment?h('div',{class:'warn'},t('pendingPay')):[plans,
-   price('m1')||price('m3')?h('div',{class:'card col'},h('b',{},t('howPay')),h('span',{},'1. '+t('pay1')),card?h('div',{class:'cardno'},card):null,pi.card_holder?h('span',{class:'hint'},pi.card_holder):null,card?h('button',{class:'btn ghost sm',type:'button',onclick:()=>copyText(card.replace(/\s/g,''),note,t('copiedCard'))},t('copyCard')):null,note,h('span',{},'2. '+t('pay2'))):h('div',{class:'warn'},t('noPrice')),
-   msg,price('m1')||price('m3')?h('button',{class:'btn green',type:'button',onclick:async e=>{e.currentTarget.disabled=true;try{const r=await rpc('pay_claim',{p_token:token,p_plan:plan});if(r.error){set(msg,errBox(r.error));return}viewSub()}catch(err){set(msg,errBox('net'))}}},t('paidBtn')):null],
+  pend?h('div',{class:'warn'},t('pendingPay'),h('br'),h('b',{},label(pend.plan)+' · '+money(pend.amount)+' '+t('sum'))):[
+   h('h3',{class:'gh'},t('subT')),subPlans,
+   h('h3',{class:'gh',id:'boost'},'★ '+t('boostT')),boosted({boost_until:st.boost_until})?h('div',{class:'ok'},t('boostActive')(fmtDate(st.boost_until))):null,h('p',{class:'hint',style:'margin:0'},t('boostS')),boostPlans,
+   anyPrice?h('div',{class:'card col'},h('b',{},t('howPay')),h('span',{},'1. '+t('pay1')),card?h('div',{class:'cardno'},card):null,pi.card_holder?h('span',{class:'hint'},pi.card_holder):null,card?h('button',{class:'btn ghost sm',type:'button',onclick:()=>copyText(card.replace(/\s/g,''),note,t('copiedCard'))},t('copyCard')):null,note,h('span',{},'2. '+t('pay2'))):h('div',{class:'warn'},t('noPrice')),
+   msg,anyPrice?payBtn:null],
   h('div',{class:'row',style:'gap:8px;opacity:.55'},h('span',{class:'paybtn click'},'Click · '+t('soon')),h('span',{class:'paybtn payme'},'Payme · '+t('soon'))));
+ if(location.hash.endsWith('#boost')||sessionBoost){sessionBoost=false;const el=document.getElementById('boost');if(el)el.scrollIntoView()}
 }
+let sessionBoost=false;
 
 // ===== профиль (вкладка)
 async function viewMe(){
@@ -470,7 +517,9 @@ async function viewMasterCabinet(){
  const days=st.sub_until?Math.max(0,Math.ceil((new Date(st.sub_until)-Date.now())/864e5)):0;
  set(app.querySelector('.top'),h('div',{class:'row'},h('span',{class:'ava big y'},initials(m.name)),h('span',{class:'txt'},h('h1',{},m.name),h('span',{class:'sub'},[catName(m.category),m.place].filter(Boolean).join(' · '))),m.verified?badgeV():null));
  set(box,m.is_admin?h('a',{class:'btn green',href:'#/admin'},t('admin')):null,m.is_active?null:h('div',{class:'warn'},t('hiddenMsg')),
+  h('div',{class:'card col'},h('b',{},t('statusL')),busyToggle(),h('span',{class:'hint'},t('statusS'))),
   h('div',{class:'card col'},h('div',{class:'row between'},h('b',{},t('accepting')),tgl),h('span',{class:'hint'},t('acceptingS'))),offl,
+  boosted(m)?h('a',{class:'card row between topcard',href:'#/sub'},h('b',{},'★ '+t('boostActive')(fmtDate(m.boost_until))),h('span',{class:'linkbtn'},'→')):h('a',{class:'card row between',href:'#/sub#boost'},h('span',{class:'col'},h('b',{},'★ '+t('boostT')),h('span',{class:'hint'},t('boostS'))),svg(I.next,20)),
   h('a',{class:'card row between',href:'#/sub'},h('b',{},days>0?(st.trial?t('trialDays')(days):t('paidDays')(days)):t('expired')),h('span',{class:'linkbtn'},t('subRenew')+' →')),
   h('h3',{class:'gh'},t('stat30')),h('div',{class:'stats'},[['views',st.views],['calls',st.calls],['resp',st.responses],['won',st.chosen]].map(([k,v])=>h('div',{class:'card stat'},h('b',{},String(v||0)),h('span',{},t('st_'+k))))),
   h('div',{class:'card col'},h('div',{class:'row between'},h('b',{},t('complete')),h('b',{},pct+'%')),h('div',{class:'prog'},h('i',{style:'width:'+pct+'%'})),pct<100?h('span',{class:'hint'},t('completeHint')):null),
@@ -527,7 +576,8 @@ async function viewAdmin(){
  const atok=adminToken||(me.is_admin?token:null);
  if(!atok){viewAdminLogin();return}
  const box=h('main',{},loading());
- const tabs=h('div',{class:'tabs three'},['masters','pays','settings'].map(k=>h('button',{type:'button','aria-pressed':String(adminTab===k),onclick:()=>{adminTab=k;viewAdmin()}},t(k==='masters'?'tabMasters':(k==='pays'?'tabPays':'tabSettings')))));
+ const TL={masters:'tabMasters',complaints:'tabComplaints',pays:'tabPays',settings:'tabSettings'};
+ const tabs=h('div',{class:'tabs four'},Object.keys(TL).map(k=>h('button',{type:'button','aria-pressed':String(adminTab===k),onclick:()=>{adminTab=k;viewAdmin()}},t(TL[k]))));
  plain(header(t('admin'),'#/'),h('main',{class:'nopad'},tabs),box);
  const call=async(fn,args)=>{try{const x=await rpc(fn,Object.assign({p_token:atok},args));if(x&&x.error){if(x.error==='forbidden'){adminToken=null;store.set('usta_admin',null);viewAdminLogin();return null}box.prepend(errBox(x.error));return null}return x}catch(e){box.prepend(errBox('net'));return null}};
  if(adminTab==='masters'){
@@ -541,18 +591,25 @@ async function viewAdmin(){
     h('button',{class:'btn ghost sm',type:'button',onclick:()=>{const pw=h('input',{type:'text',minlength:6,maxlength:72,placeholder:t('newPw'),'aria-label':t('newPw')});set(out,pw,h('button',{class:'btn yellow sm',type:'button',onclick:async()=>{const x=await call('admin_reset_master_password',{p_id:m.id,p_password:pw.value});if(x)set(out,okBox(t('pwSet')+' '+pw.value))}},t('save')))}},t('resetPw')),
     h('button',{class:'btn ghost sm danger',type:'button',onclick:()=>set(btns,h('button',{class:'btn danger sm',type:'button',onclick:async()=>{if(await call('admin_delete_master',{p_id:m.id}))viewAdmin()}},t('delYes')),h('button',{class:'btn ghost sm',type:'button',onclick:base},t('cancel')))},t('delS')));
    base();
-   return h('div',{class:'panel',style:m.is_active?null:'opacity:.7'},h('div',{class:'txt'},h('b',{},m.name,' ',m.verified?badgeV():null,m.is_active?null:' · '+t('hidden'),m.accepting===false?' · '+t('offline'):null),h('span',{},catName(m.category)+' · '+[m.place,regName(m.region)].filter(Boolean).join(', ')),h('span',{},fmtPhone(m.phone)+' · '+t('subTill')(fmtDate(m.sub_until))+(m.trial?' ('+t('trial').toLowerCase()+')':''))),btns,out)}));
+   return h('div',{class:'panel',style:m.is_active?null:'opacity:.7'},h('div',{class:'txt'},h('b',{},m.name,' ',m.verified?badgeV():null,' ',boosted(m)?badgeTop():null,m.is_active?null:' · '+t('hidden'),m.accepting===false?' · '+t('offline'):null),h('span',{class:'row',style:'gap:6px;flex-wrap:wrap'},statusChip(m),rate(m)?h('span',{class:'rate'},rate(m)):null,m.complaints?h('span',{class:'badge b-r'},'⚠ '+t('complaintsN')(m.complaints)):null),h('span',{},catName(m.category)+' · '+[m.place,regName(m.region)].filter(Boolean).join(', ')),h('span',{},fmtPhone(m.phone)+' · '+t('subTill')(fmtDate(m.sub_until))+(m.trial?' ('+t('trial').toLowerCase()+')':''))),btns,out)}));
+ }else if(adminTab==='complaints'){
+  const r=await call('admin_complaints',{});if(!r)return;
+  set(box,r.complaints.length?r.complaints.map(k=>h('div',{class:'panel',style:k.status==='open'?null:'opacity:.65'},h('div',{class:'row between'},h('b',{},t('r_'+k.reason)),h('span',{class:'badge '+(k.status==='open'?'b-r':'b-x')},k.status==='open'?t('openL'):t('resolvedL'))),
+   k.body?h('p',{style:'white-space:pre-line'},k.body):null,
+   h('span',{},h('a',{href:'#/m/'+k.master_id,class:'linkbtn',style:'padding:0;min-height:0'},k.master_name),' · '+fmtPhone(k.master_phone)+(k.master_active?'':' · '+t('hidden'))),
+   h('span',{class:'hint'},t('fromL')+': '+k.client_name+' · '+fmtPhone(k.client_phone)+' · '+ago(k.created_at)),
+   k.status==='open'?h('div',{class:'row wrap'},k.master_active?h('button',{class:'btn ghost sm danger',type:'button',onclick:async()=>{if(await call('admin_set_active',{p_id:k.master_id,p_active:false}))viewAdmin()}},t('hide')):null,h('button',{class:'btn green sm',type:'button',onclick:async()=>{if(await call('admin_resolve_complaint',{p_id:k.id}))viewAdmin()}},t('resolve'))):null)):h('p',{class:'muted center'},t('noComplaints')));
  }else if(adminTab==='pays'){
   const r=await call('admin_payments',{});if(!r)return;
   set(box,r.payments.length?r.payments.map(p=>h('div',{class:'panel'},h('div',{class:'row between'},h('b',{},p.name),h('span',{class:'badge '+(p.status==='pending'?'b-y':(p.status==='confirmed'?'b-g':'b-r'))},t('p_'+p.status))),
-   h('span',{},fmtPhone(p.phone)+' · '+t(p.plan)+' · '+money(p.amount)+' '+t('sum')),h('span',{class:'hint'},ago(p.created_at)),
+   h('span',{},fmtPhone(p.phone)+' · '+(p.plan.startsWith('boost')?t('boostT')+' ':'')+t(p.plan)+' · '+money(p.amount)+' '+t('sum')),h('span',{class:'hint'},ago(p.created_at)),
    p.status==='pending'?h('div',{class:'row'},h('button',{class:'btn ghost sm danger',type:'button',onclick:async()=>{if(await call('admin_decide_payment',{p_id:p.id,p_ok:false}))viewAdmin()}},t('rejectPay')),h('button',{class:'btn green sm',type:'button',onclick:async()=>{if(await call('admin_decide_payment',{p_id:p.id,p_ok:true}))viewAdmin()}},t('confirmPay'))):null)):h('p',{class:'muted center'},t('noPays')));
  }else{
   const r=await call('admin_payments',{});if(!r)return;const c=r.config||{};const msg=h('div',{'aria-live':'polite'});
-  const p1=h('input',{id:'s-p1',type:'text',inputmode:'numeric',value:c.price_m1&&c.price_m1!=='0'?c.price_m1:''}),p3=h('input',{id:'s-p3',type:'text',inputmode:'numeric',value:c.price_m3&&c.price_m3!=='0'?c.price_m3:''});
+  const pv=k=>c[k]&&c[k]!=='0'?c[k]:'';const p1=h('input',{id:'s-p1',type:'text',inputmode:'numeric',value:pv('price_m1')}),p3=h('input',{id:'s-p3',type:'text',inputmode:'numeric',value:pv('price_m3')}),b7=h('input',{id:'s-b7',type:'text',inputmode:'numeric',value:pv('price_boost7')}),b30=h('input',{id:'s-b30',type:'text',inputmode:'numeric',value:pv('price_boost30')});
   const cn=h('input',{id:'s-card',type:'text',inputmode:'numeric',maxlength:24,value:c.card_number||'',autocomplete:'off'}),ch=h('input',{id:'s-holder',type:'text',maxlength:60,value:c.card_holder||''});
-  set(box,field('s-p1',t('priceM1'),p1),field('s-p3',t('priceM3'),p3),field('s-card',t('cardL'),cn),field('s-holder',t('holderL'),ch),msg,
-   h('button',{class:'btn yellow',type:'button',onclick:async()=>{set(msg);const x=await call('admin_set_config',{p_price_m1:p1.value.replace(/\D/g,''),p_price_m3:p3.value.replace(/\D/g,''),p_card:cn.value.replace(/[^\d ]/g,'').trim(),p_holder:ch.value});if(x)set(msg,okBox(t('saved')))}},t('save')),
+  set(box,field('s-p1',t('priceM1'),p1),field('s-p3',t('priceM3'),p3),field('s-b7',t('priceB7'),b7),field('s-b30',t('priceB30'),b30),field('s-card',t('cardL'),cn),field('s-holder',t('holderL'),ch),msg,
+   h('button',{class:'btn yellow',type:'button',onclick:async()=>{set(msg);const x=await call('admin_set_config2',{p_price_m1:p1.value.replace(/\D/g,''),p_price_m3:p3.value.replace(/\D/g,''),p_price_b7:b7.value.replace(/\D/g,''),p_price_b30:b30.value.replace(/\D/g,''),p_card:cn.value.replace(/[^\d ]/g,'').trim(),p_holder:ch.value});if(x)set(msg,okBox(t('saved')))}},t('save')),
    adminToken?h('button',{class:'btn ghost',type:'button',onclick:async()=>{const tk=adminToken;adminToken=null;store.set('usta_admin',null);try{await rpc('admin_logout',{p_token:tk})}catch(e){}go('#/')}},t('logout')):null);
  }
 }
@@ -575,7 +632,8 @@ async function render(){
  if(a==='chats')return viewChats();
  if(a==='chat'&&p[1]&&p[2])return viewChat(p[1],p[2]);
  if(a==='feed')return viewFeed();
- if(a==='sub')return viewSub();
+ if(a==='sub'||a==='sub#boost'){if(a!=='sub')sessionBoost=true;return viewSub()}
+ if(a==='complain'&&p[1])return viewComplain(p[1]);
  if(a==='me')return viewMe();
  if(a==='mreg')return viewMasterAuth();
  if(a==='admin')return viewAdmin();

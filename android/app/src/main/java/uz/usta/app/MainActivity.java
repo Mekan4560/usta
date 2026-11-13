@@ -47,7 +47,7 @@ public class MainActivity extends Activity {
             public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
                 if (request.isForMainFrame()) {
                     String html = "<html><body style='font-family:sans-serif;padding:32px;text-align:center'>"
-                            + "<h2>Internet yoʻq / Нет интернета</h2>"
+                            + "<h2>Internet yöq / Нет интернета</h2>"
                             + "<p><a style='font-size:20px' href='" + HOME + "'>Qayta urinish / Повторить</a></p>"
                             + "</body></html>";
                     view.loadDataWithBaseURL(null, html, "text/html", "UTF-8", null);

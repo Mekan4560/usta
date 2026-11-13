@@ -1,0 +1,32 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'uz.usta.app'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'uz.usta.app'
+        minSdk 23
+        targetSdk 34
+        versionCode 1
+        versionName '1.0'
+    }
+
+    // Пробная подпись со стандартным отладочным ключом Android, чтобы обновления ставились поверх.
+    // Для публикации в магазине нужен отдельный закрытый ключ, которого в репозитории быть не должно.
+    signingConfigs {
+        debug {
+            storeFile file('../debug.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}

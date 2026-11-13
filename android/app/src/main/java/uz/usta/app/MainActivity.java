@@ -4,6 +4,9 @@ import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.webkit.PermissionRequest;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
@@ -17,6 +20,8 @@ public class MainActivity extends Activity {
     private static final int PICK_FILE = 1;
     private WebView web;
     private ValueCallback<Uri[]> fileCallback;
+    private PermissionRequest pendingPermission;
+    private static final int MIC = 2;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -56,6 +61,24 @@ public class MainActivity extends Activity {
         });
 
         web.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public void onPermissionRequest(final PermissionRequest request) {
+                boolean audio = false;
+                for (String r : request.getResources()) {
+                    if (PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(r)) audio = true;
+                }
+                if (!audio || !request.getOrigin().toString().startsWith("https://mekan4560.github.io")) {
+                    request.deny();
+                    return;
+                }
+                if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                    request.grant(new String[]{PermissionRequest.RESOURCE_AUDIO_CAPTURE});
+                } else {
+                    pendingPermission = request;
+                    requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, MIC);
+                }
+            }
+
             @Override
             public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback, FileChooserParams params) {
                 if (fileCallback != null) {
@@ -99,6 +122,19 @@ public class MainActivity extends Activity {
             }
             fileCallback.onReceiveValue(result);
             fileCallback = null;
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
+        super.onRequestPermissionsResult(requestCode, permissions, results);
+        if (requestCode == MIC && pendingPermission != null) {
+            if (results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED) {
+                pendingPermission.grant(new String[]{PermissionRequest.RESOURCE_AUDIO_CAPTURE});
+            } else {
+                pendingPermission.deny();
+            }
+            pendingPermission = null;
         }
     }
 

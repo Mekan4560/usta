@@ -270,6 +270,16 @@ details.adm .txt{min-width:0}
 .panel.dim{opacity:.72}
 .btn.okc{color:var(--green)}
 .confirm{display:flex;flex-direction:column;gap:8px;background:var(--rsoft);border-radius:12px;padding:12px;font-size:14px;color:#7A1C12}
+.ava.pic{padding:0;overflow:hidden;background:#E4E7E1}.ava.pic img{width:100%;height:100%;object-fit:cover;display:block}
+.avatarlink{position:relative;display:inline-flex;cursor:pointer;border-radius:50%}
+.avatarlink .cam{position:absolute;right:-2px;bottom:-2px;width:26px;height:26px;border-radius:13px;background:var(--yellow);color:var(--ink);font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid var(--ink)}
+.avatarbox{align-items:flex-start;gap:14px}
+.catpick{display:flex;flex-direction:column;gap:8px}
+.chip.sel{display:inline-flex;align-items:center;gap:6px;background:var(--ink);color:#fff;border-color:var(--ink);padding-right:4px}
+.chip.sel small{color:#B9C4C0;font-weight:500}
+.chip.sel .x{width:30px;height:30px;border-radius:15px;border:0;background:rgba(255,255,255,.15);color:#fff;font-size:18px;line-height:1}
+.chip.add{border-style:dashed}
+.catgroups{display:flex;flex-direction:column;gap:12px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px}
 /* bottom nav */
 .nav{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;justify-content:space-around;align-items:center;background:var(--navbg);padding:8px max(6px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-left,0px));border-top:1px solid #262C2B;max-width:520px;margin:0 auto}
 .nav a{position:relative;width:56px;height:48px;display:flex;align-items:center;justify-content:center;color:#5C6563;border-radius:12px}
@@ -279,13 +289,14 @@ details.adm .txt{min-width:0}
 .nb{position:absolute;top:0;right:4px;min-width:22px;height:22px;padding:0 6px;border-radius:11px;background:#E5484D;color:#fff;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;border:2px solid var(--navbg)}
 .nav .av{width:34px;height:34px;border-radius:17px;background:#5B6CD9;color:#fff;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center}
 .nav .av svg{width:22px;height:22px;fill:#fff}
+.nav .av.pic{padding:0;overflow:hidden}.nav .av.pic img{width:100%;height:100%;object-fit:cover}
 .nav a.on .av{box-shadow:0 0 0 2px #F4F5F1}
 </style>
 </head>
 <body>
 <div id="app"></div>
-<script src="data.js?v=32"></script>
-<script src="i18n3.js?v=32"></script>
-<script src="app.js?v=32"></script>
+<script src="data.js?v=33"></script>
+<script src="i18n3.js?v=33"></script>
+<script src="app.js?v=33"></script>
 </body>
 </html>

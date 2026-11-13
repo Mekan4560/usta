@@ -235,3 +235,14 @@ for(const l of ['uz','kaa','tk'])for(const k of ['delNote','e_blocked'])if(!T[l]
 Object.assign(T.uz,{delNote:'Profil katalogdan yaşiriladi. Şarhlar va reyting saqlanadi — ularni faqat administrator öçira oladi.',e_blocked:'Akkaunt administrator tomonidan bloklangan'});
 Object.assign(T.kaa,{delNote:'Profil katalogtan jasırıladı. Pikirler hám reyting saqlanadı — olardı tek administrator óshire aladı.',e_blocked:'Akkaunt administrator tárepinen bloklanǵan'});
 Object.assign(T.tk,{delNote:'Profil katalogdan gizlener. Synlar we reýting saklanýar — olary diňe administrator pozup bilýär.',e_blocked:'Akkaunt administrator tarapyndan petiklendi'});
+// v3.3: несколько направлений и фото профиля
+(function(){const X={
+ru:{dirs:'Направления',dirsHint:'Выберите до 5 направлений. Первое — главное.',dirsAdd:'+ Добавить направление',dirsDone:'Готово',e_cats:'Выберите хотя бы одно направление',maxDirs:'Можно выбрать не больше 5 направлений',
+ avatarL:'Фото профиля',avatarAdd:'Добавить фото',avatarChange:'Сменить фото',avatarDel:'Удалить фото',avatarHint:'Лицо крупным планом — заказчики чаще звонят мастерам с фото',allMine:'Все мои направления',mainDir:'главное'},
+uz:{dirs:'Yönalişlar',dirsHint:'5 tagacha yönaliş tanlang. Birinçisi — asosiy.',dirsAdd:'+ Yönaliş qöşiş',dirsDone:'Tayyor',e_cats:'Kamida bitta yönaliş tanlang',maxDirs:'Köpi bilan 5 ta yönaliş tanlaş mumkin',
+ avatarL:'Profil rasmi',avatarAdd:'Rasm qöşiş',avatarChange:'Rasmni almaştiriş',avatarDel:'Rasmni öçiriş',avatarHint:'Yuzingiz yaqindan — buyurtmaçilar rasmli ustalarga köproq qönğiroq qiladi',allMine:'Barça yönalişlarim',mainDir:'asosiy'},
+kaa:{dirs:'Baǵdarlar',dirsHint:'5 ke shekem baǵdar tańlań. Birinshisi — tiykarǵı.',dirsAdd:'+ Baǵdar qosıw',dirsDone:'Tayar',e_cats:'Keminde bir baǵdar tańlań',maxDirs:'Eń kóbi 5 baǵdar tańlawǵa boladı',
+ avatarL:'Profil súwreti',avatarAdd:'Súwret qosıw',avatarChange:'Súwretti almastırıw',avatarDel:'Súwretti óshiriw',avatarHint:'Júzińiz jaqınnan — buyırtpashılar súwretli ustalarǵa kóbirek qońıraw etedi',allMine:'Barlıq baǵdarlarım',mainDir:'tiykarǵı'},
+tk:{dirs:'Ugurlar',dirsHint:'5-e çenli ugur saýlaň. Birinjisi — esasy.',dirsAdd:'+ Ugur goşmak',dirsDone:'Taýýar',e_cats:'Iň bolmanda bir ugur saýlaň',maxDirs:'Iň köp 5 ugur saýlap bolýar',
+ avatarL:'Profil suraty',avatarAdd:'Surat goşmak',avatarChange:'Suraty çalyşmak',avatarDel:'Suraty pozmak',avatarHint:'Ýüzüňiz ýakyndan — müşderiler suratly ussalara köpräk jaň edýär',allMine:'Ähli ugurlarym',mainDir:'esasy'}};
+for(const l in X)Object.assign(T[l],X[l]);})();

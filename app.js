@@ -190,7 +190,7 @@ function viewLoc(){
 }
 
 // ===== профиль мастера (для заказчика)
-async function isAdmin(){if(adminToken)return true;return !!(me&&me.is_admin)}
+async function isAdmin(){return !!adminToken}
 async function viewMaster(id){
  shell('home',header(t('profile'),'#/'),h('main',{},loading()));
  let m;
@@ -204,7 +204,7 @@ async function viewMaster(id){
   h('main',{},h('div',{class:'panel'},h('div',{class:'phone'},fmtPhone(m.phone)),h('button',{class:'btn ghost',type:'button',onclick:()=>copyText(m.phone,note,t('copied'))},t('copy')),note),m.about?h('div',{class:'panel'},h('h3',{},t('about')),h('p',{},m.about)):null,rateBox,photoBox,revBox,role()!=='master'?h('a',{class:'linkbtn center muted2',href:'#/complain/'+m.id},'⚠ '+t('complain')):null),
   h('div',{class:'bar'},role()!=='master'?h('div',{class:'row'},h('a',{class:'btn green',href:'tel:'+m.phone,onclick:()=>logEv(m.id,'call')},svg(I.phone,22,'#fff'),t('call')),h('a',{class:'btn yellow',href:'#/new/'+m.category,style:'flex:0 0 auto;width:auto'},'+')):h('a',{class:'btn green',href:'tel:'+m.phone},svg(I.phone,22,'#fff'),t('call'))));
  app.classList.remove('withnav');
- const admin=await isAdmin();const mid=encodeURIComponent(m.id);const atok=adminToken||token;
+ const admin=await isAdmin();const mid=encodeURIComponent(m.id);const atok=adminToken;
  const loadPhotos=async()=>{try{const ps=await api('master_photos?select=id,data&master_id=eq.'+mid+'&order=created_at');set(photoBox,ps.length?h('div',{class:'panel'},h('h3',{},t('photos')),photoGrid(ps,admin?async p=>{try{await rpc('admin_delete_photo',{p_token:atok,p_id:p.id})}catch(e){}loadPhotos()}:null)):null)}catch(e){}};
  const loadReviews=async()=>{
   let rs=[];try{rs=await api('reviews?select=id,author,rating,body,tags,created_at&master_id=eq.'+mid+'&order=created_at.desc&limit=100')}catch(e){}
@@ -512,11 +512,11 @@ async function viewMasterCabinet(){
   set(photoBox,h('h3',{},t('photos')),ps.length?photoGrid(ps,async p=>{try{await rpc('delete_photo',{p_token:token,p_id:p.id})}catch(e){}loadMy()}):null,ps.length<6?h('label',{class:'btn ghost',for:'f-photo',style:'cursor:pointer'},'+ '+t('addPhoto')):null,file,h('div',{class:'hint'},t('photoHint')),pmsg)};
  loadMy();
  const delBox=h('div',{});
- const askDel=()=>set(delBox,h('div',{class:'panel'},h('b',{},t('delQ')),h('button',{class:'btn danger',type:'button',onclick:async()=>{try{const r=await rpc('delete_master',{p_token:token});if(r&&r.error)throw 0;logoutLocal();go('#/')}catch(e){set(msg,errBox('net'))}}},t('delYes')),h('button',{class:'btn ghost',type:'button',onclick:()=>showDel()},t('cancel'))));
+ const askDel=()=>set(delBox,h('div',{class:'panel'},h('b',{},t('delQ')),h('span',{class:'hint'},t('delNote')),h('button',{class:'btn danger',type:'button',onclick:async()=>{try{const r=await rpc('delete_master',{p_token:token});if(r&&r.error)throw 0;logoutLocal();go('#/')}catch(e){set(msg,errBox('net'))}}},t('delYes')),h('button',{class:'btn ghost',type:'button',onclick:()=>showDel()},t('cancel'))));
  const showDel=()=>set(delBox,h('button',{class:'btn danger',type:'button',onclick:askDel},t('del')));showDel();
  const days=st.sub_until?Math.max(0,Math.ceil((new Date(st.sub_until)-Date.now())/864e5)):0;
  set(app.querySelector('.top'),h('div',{class:'row'},h('span',{class:'ava big y'},initials(m.name)),h('span',{class:'txt'},h('h1',{},m.name),h('span',{class:'sub'},[catName(m.category),m.place].filter(Boolean).join(' · '))),m.verified?badgeV():null));
- set(box,m.is_admin?h('a',{class:'btn green',href:'#/admin'},t('admin')):null,m.is_active?null:h('div',{class:'warn'},t('hiddenMsg')),
+ set(box,m.is_active?null:h('div',{class:'warn'},t('hiddenMsg')),
   h('div',{class:'card col'},h('b',{},t('statusL')),busyToggle(),h('span',{class:'hint'},t('statusS'))),
   h('div',{class:'card col'},h('div',{class:'row between'},h('b',{},t('accepting')),tgl),h('span',{class:'hint'},t('acceptingS'))),offl,
   boosted(m)?h('a',{class:'card row between topcard',href:'#/sub'},h('b',{},'★ '+t('boostActive')(fmtDate(m.boost_until))),h('span',{class:'linkbtn'},'→')):h('a',{class:'card row between',href:'#/sub#boost'},h('span',{class:'col'},h('b',{},'★ '+t('boostT')),h('span',{class:'hint'},t('boostS'))),svg(I.next,20)),
@@ -571,46 +571,118 @@ async function viewAdminLogin(){
     adminToken=r.token;store.set('usta_admin',adminToken);viewAdmin()}catch(err){set(msg,errBox('net'));submit.disabled=false}}},
   field('a-login',t('loginL'),login),field('a-pass',t('pass'),pass,exists?null:t('setupH')),msg,submit));
 }
-let adminTab='masters';
+let adminTab='overview',adminFilter='all',adminQ='',reviewMaster=null,reviewLow=false,clientQ='';
 async function viewAdmin(){
- const atok=adminToken||(me.is_admin?token:null);
+ const atok=adminToken;
  if(!atok){viewAdminLogin();return}
  const box=h('main',{},loading());
- const TL={masters:'tabMasters',complaints:'tabComplaints',pays:'tabPays',settings:'tabSettings'};
- const tabs=h('div',{class:'tabs four'},Object.keys(TL).map(k=>h('button',{type:'button','aria-pressed':String(adminTab===k),onclick:()=>{adminTab=k;viewAdmin()}},t(TL[k]))));
- plain(header(t('admin'),'#/'),h('main',{class:'nopad'},tabs),box);
+ const TL={overview:'tabOverview',masters:'tabMasters',reviews:'tabReviews',requests:'tabRequests',clients:'tabClients',complaints:'tabComplaints',pays:'tabPays',settings:'tabSettings'};
+ const tabs=h('div',{class:'filters admintabs',role:'tablist'},Object.keys(TL).map(k=>h('button',{type:'button',class:'fchip',role:'tab','aria-selected':String(adminTab===k),'aria-pressed':String(adminTab===k),onclick:()=>{adminTab=k;if(k!=='reviews')reviewMaster=null;viewAdmin()}},t(TL[k]))));
+ plain(h('div',{class:'top'},h('div',{class:'row'},h('a',{class:'back',href:'#/','aria-label':t('back')},svg(I.back,22,'#fff')),h('h1',{},t('adminT'))),tabs),box);
+ const sel=tabs.querySelector('[aria-pressed="true"]');if(sel)sel.scrollIntoView({inline:'center',block:'nearest'});
  const call=async(fn,args)=>{try{const x=await rpc(fn,Object.assign({p_token:atok},args));if(x&&x.error){if(x.error==='forbidden'){adminToken=null;store.set('usta_admin',null);viewAdminLogin();return null}box.prepend(errBox(x.error));return null}return x}catch(e){box.prepend(errBox('net'));return null}};
- if(adminTab==='masters'){
+ const confirmBtn=(label,question,action,cls)=>{const w=h('div',{});const base=()=>set(w,h('button',{class:'btn ghost sm danger '+(cls||''),type:'button',onclick:()=>set(w,h('div',{class:'confirm'},h('span',{},question),h('div',{class:'row'},h('button',{class:'btn ghost sm',type:'button',onclick:base},t('cancel')),h('button',{class:'btn danger solid sm',type:'button',onclick:action},t('delYes')))))},label));base();return w};
+ const searchBox=(val,ph,on)=>{const i=h('input',{type:'search',value:val,placeholder:ph,'aria-label':ph});let tm;i.addEventListener('input',()=>{clearTimeout(tm);tm=setTimeout(()=>on(i.value),250)});return h('label',{class:'search light'},svg(I.search,20,'#56625F'),i)};
+
+ if(adminTab==='overview'){
+  const st=await call('admin_stats',{});if(!st)return;
+  const tile=(n,l,s2,go2)=>h(go2?'a':'div',{class:'card stat2',href:go2||null},h('b',{},String(n)),h('span',{},l),s2?h('small',{},s2):null);
+  set(box,
+   (st.pay_pending||st.complaints_open)?h('div',{class:'card col attn'},h('b',{},t('ov_todo')),st.pay_pending?h('button',{class:'linkbtn',type:'button',onclick:()=>{adminTab='pays';viewAdmin()}},t('ov_pend')(st.pay_pending)+' →'):null,st.complaints_open?h('button',{class:'linkbtn',type:'button',onclick:()=>{adminTab='complaints';viewAdmin()}},t('ov_comp')(st.complaints_open)+' →'):null):okBox(t('ov_none')),
+   h('div',{class:'card col income'},h('span',{},t('ov_income')),h('b',{},money(st.income_month)+' '+t('sum')),h('small',{},t('ov_total')+': '+money(st.income_total)+' '+t('sum'))),
+   h('h3',{class:'gh'},t('ov_masters')+': '+st.masters),
+   h('div',{class:'stats3'},tile(st.visible,t('ov_visible')),tile(st.trial,t('ov_trial')),tile(st.paid,t('ov_paid')),tile(st.expired,t('ov_expired')),tile(st.boosted,t('ov_boosted')),tile(st.new7,t('ov_new7'))),
+   h('h3',{class:'gh'},t('ov_clients')+': '+st.clients),
+   h('div',{class:'stats3'},tile(st.clients7,t('ov_new7')),tile(st.reviews,t('tabReviews').toLowerCase()),tile(st.resp30,t('ov_resp'))),
+   h('h3',{class:'gh'},t('ov_req')),
+   h('div',{class:'stats3'},tile(st.req_today,t('ov_today')),tile(st.req7,t('ov_7')),tile(st.req30,t('ov_30'))));
+ }
+ else if(adminTab==='masters'){
   const r=await call('admin_list_masters_v3',{});if(!r)return;
-  set(box,h('p',{class:'hint'},t('adminStats')(r.masters.length,r.clients,r.requests)),r.masters.map(m=>{
-   const btns=h('div',{class:'row wrap'});const out=h('div',{});
-   const base=()=>set(btns,
-    h('button',{class:'btn ghost sm',type:'button',onclick:async()=>{if(await call('admin_set_verified',{p_id:m.id,p_on:!m.verified}))viewAdmin()}},m.verified?t('unverify'):t('verifyBtn')),
-    h('button',{class:'btn ghost sm',type:'button',onclick:async()=>{if(await call('admin_extend',{p_id:m.id,p_days:30}))viewAdmin()}},t('extend30')),
-    h('button',{class:'btn ghost sm',type:'button',onclick:async()=>{if(await call('admin_set_active',{p_id:m.id,p_active:!m.is_active}))viewAdmin()}},m.is_active?t('hide'):t('show')),
-    h('button',{class:'btn ghost sm',type:'button',onclick:()=>{const pw=h('input',{type:'text',minlength:6,maxlength:72,placeholder:t('newPw'),'aria-label':t('newPw')});set(out,pw,h('button',{class:'btn yellow sm',type:'button',onclick:async()=>{const x=await call('admin_reset_master_password',{p_id:m.id,p_password:pw.value});if(x)set(out,okBox(t('pwSet')+' '+pw.value))}},t('save')))}},t('resetPw')),
-    h('button',{class:'btn ghost sm danger',type:'button',onclick:()=>set(btns,h('button',{class:'btn danger sm',type:'button',onclick:async()=>{if(await call('admin_delete_master',{p_id:m.id}))viewAdmin()}},t('delYes')),h('button',{class:'btn ghost sm',type:'button',onclick:base},t('cancel')))},t('delS')));
-   base();
-   return h('div',{class:'panel',style:m.is_active?null:'opacity:.7'},h('div',{class:'txt'},h('b',{},m.name,' ',m.verified?badgeV():null,' ',boosted(m)?badgeTop():null,m.is_active?null:' · '+t('hidden'),m.accepting===false?' · '+t('offline'):null),h('span',{class:'row',style:'gap:6px;flex-wrap:wrap'},statusChip(m),rate(m)?h('span',{class:'rate'},rate(m)):null,m.complaints?h('span',{class:'badge b-r'},'⚠ '+t('complaintsN')(m.complaints)):null),h('span',{},catName(m.category)+' · '+[m.place,regName(m.region)].filter(Boolean).join(', ')),h('span',{},fmtPhone(m.phone)+' · '+t('subTill')(fmtDate(m.sub_until))+(m.trial?' ('+t('trial').toLowerCase()+')':''))),btns,out)}));
- }else if(adminTab==='complaints'){
+  const now=Date.now();const exp=m=>new Date(m.sub_until)<=now;
+  const F={all:m=>!m.deleted_at,trial:m=>!m.deleted_at&&m.trial&&!exp(m),paid:m=>!m.deleted_at&&!m.trial&&!exp(m),expired:m=>!m.deleted_at&&exp(m),top:m=>!m.deleted_at&&boosted(m),comp:m=>m.complaints>0,hidden:m=>!m.deleted_at&&!m.is_active,deleted:m=>!!m.deleted_at};
+  const FL={all:'f_all',trial:'f_trial',paid:'f_paid',expired:'f_expired',top:'f_top',comp:'f_comp',hidden:'f_hidden',deleted:'f_deleted'};
+  const list=h('div',{class:'col gap'});
+  const chips=h('div',{class:'filters'});
+  const draw=()=>{
+   set(chips,Object.keys(F).map(k=>h('button',{type:'button',class:'fchip','aria-pressed':String(adminFilter===k),onclick:()=>{adminFilter=k;draw()}},t(FL[k])+' · '+r.masters.filter(F[k]).length)));
+   const q=norm(adminQ),qd=adminQ.replace(/\D/g,'');
+   const rows=r.masters.filter(F[adminFilter]).filter(m=>!adminQ||norm(m.name).includes(q)||(qd&&m.phone.includes(qd)));
+   set(list,rows.length?rows.map(masterAdminCard):h('p',{class:'muted center'},t('emptyS')));
+  };
+  const masterAdminCard=m=>{
+   const out=h('div',{});const acts=h('div',{class:'row wrap'});
+   const b2=(label,fn,cls)=>h('button',{class:'btn ghost sm '+(cls||''),type:'button',onclick:async()=>{if(await fn())viewAdmin()}},label);
+   set(acts,m.deleted_at?[b2(t('restore'),()=>call('admin_restore_master',{p_id:m.id}),'okc')]:[
+    b2(m.verified?t('unverify'):t('verifyBtn'),()=>call('admin_set_verified',{p_id:m.id,p_on:!m.verified})),
+    b2(t('extend30'),()=>call('admin_extend',{p_id:m.id,p_days:30})),
+    boosted(m)?b2(t('topOff'),()=>call('admin_boost',{p_id:m.id,p_days:-1})):b2(t('topPlus7'),()=>call('admin_boost',{p_id:m.id,p_days:7})),
+    b2(m.is_active?t('hide'):t('show'),()=>call('admin_set_active',{p_id:m.id,p_active:!m.is_active})),
+    h('button',{class:'btn ghost sm',type:'button',onclick:()=>{reviewMaster={id:m.id,name:m.name};adminTab='reviews';viewAdmin()}},t('reviewsBtn')+(m.rating_count?' · '+m.rating_count:'')),
+    h('button',{class:'btn ghost sm',type:'button',onclick:()=>{const pw=h('input',{type:'text',minlength:6,maxlength:72,placeholder:t('newPw'),'aria-label':t('newPw')});set(out,pw,h('button',{class:'btn yellow sm',type:'button',onclick:async()=>{const x=await call('admin_reset_master_password',{p_id:m.id,p_password:pw.value});if(x)set(out,okBox(t('pwSet')+' '+pw.value))}},t('save')))}},t('resetPw'))]);
+   return h('details',{class:'panel adm'+(m.deleted_at||!m.is_active?' dim':'')},
+    h('summary',{},h('span',{class:'txt'},h('b',{},m.name,' ',m.verified?badgeV():null,' ',boosted(m)?badgeTop():null),
+     h('span',{},catName(m.category)+' · '+[m.place,regName(m.region)].filter(Boolean).join(', ')),
+     h('span',{class:'row',style:'gap:6px;flex-wrap:wrap'},m.deleted_at?h('span',{class:'badge b-r'},t('deletedL')):(m.is_active?statusChip(m):h('span',{class:'badge b-x'},t('hidden'))),
+      h('span',{class:'badge '+(exp(m)?'b-r':(m.trial?'b-y':'b-g'))},exp(m)?t('expired'):(m.trial?t('f_trial'):t('f_paid'))+' · '+fmtDate(m.sub_until)),rate(m)?h('span',{class:'rate'},rate(m)):null,m.complaints?h('span',{class:'badge b-r'},'⚠ '+t('complaintsN')(m.complaints)):null))),
+    h('div',{class:'col gap',style:'margin-top:10px'},h('span',{class:'hint'},fmtPhone(m.phone)+' · '+t('resp30')(m.responses30||0)+(m.accepting===false?' · '+t('offline'):'')),acts,out,
+     confirmBtn(t('delForever'),t('delForeverQ'),async()=>{if(await call('admin_delete_master',{p_id:m.id}))viewAdmin()})));
+  };
+  set(box,searchBox(adminQ,t('searchPh'),v=>{adminQ=v;draw()}),chips,list);draw();
+ }
+ else if(adminTab==='reviews'){
+  const r=await call('admin_reviews',{p_master:reviewMaster?reviewMaster.id:null});if(!r)return;
+  const list=h('div',{class:'col gap'});const chips=h('div',{class:'filters'});
+  const draw=()=>{set(chips,h('button',{type:'button',class:'fchip','aria-pressed':String(!reviewLow),onclick:()=>{reviewLow=false;draw()}},t('f_all')+' · '+r.reviews.length),h('button',{type:'button',class:'fchip','aria-pressed':String(reviewLow),onclick:()=>{reviewLow=true;draw()}},t('f_low')+' · '+r.reviews.filter(x=>x.rating<=2).length),
+    reviewMaster?h('button',{type:'button',class:'fchip dark2',onclick:()=>{reviewMaster=null;viewAdmin()}},reviewMaster.name+' ✕'):null);
+   const rows=r.reviews.filter(x=>!reviewLow||x.rating<=2);
+   set(list,rows.length?rows.map(x=>h('div',{class:'panel'},h('div',{class:'row between'},h('b',{},x.author),h('span',{class:'rate'},'★'.repeat(x.rating)+'☆'.repeat(5-x.rating))),
+    h('span',{class:'hint'},t('reviewOf')+': ',h('a',{href:'#/m/'+x.master_id,class:'linkbtn',style:'padding:0;min-height:0'},x.master_name),' · '+fmtDate(x.created_at)+(x.client_phone?' · '+fmtPhone(x.client_phone):'')),
+    x.body?h('p',{style:'white-space:pre-line'},x.body):null,
+    (x.q_quality||x.q_time||x.q_price||x.q_polite)?h('span',{class:'hint'},['quality','time','price','polite'].filter(k=>x['q_'+k]).map(k=>t('q_'+k)+' '+x['q_'+k]).join(' · ')):null,
+    confirmBtn(t('delS'),t('delReviewQ'),async()=>{if(await call('admin_delete_review',{p_id:x.id}))viewAdmin()}))):h('p',{class:'muted center'},t('noReviewsA')))};
+  set(box,chips,list);draw();
+ }
+ else if(adminTab==='requests'){
+  const r=await call('admin_requests',{});if(!r)return;
+  set(box,r.requests.length?r.requests.map(x=>h('div',{class:'panel',style:x.status==='open'?null:'opacity:.7'},h('div',{class:'row between'},h('span',{class:'badge '+(x.status==='open'?'b-g':'b-x')},x.status==='open'?t('st_open'):t('st_closed')),h('span',{class:'hint'},ago(x.created_at))),
+   h('b',{class:'clamp'},x.body||'🎤 '+t('voiceMsg')),h('div',{class:'meta'},h('span',{},catName(x.category)),h('span',{},x.place),h('span',{},t('respN')(x.response_count)),x.chosen?h('span',{class:'strong'},t('st_chosen')):null),
+   h('span',{class:'hint'},x.client_name+' · '+fmtPhone(x.client_phone)),
+   x.status==='open'?h('button',{class:'btn ghost sm danger',type:'button',onclick:async()=>{if(await call('admin_close_request',{p_id:x.id}))viewAdmin()}},t('closeA')):null)):h('p',{class:'muted center'},t('noRequestsA')));
+ }
+ else if(adminTab==='clients'){
+  const r=await call('admin_clients',{});if(!r)return;const list=h('div',{class:'col gap'});
+  const draw=()=>{const q=norm(clientQ),qd=clientQ.replace(/\D/g,'');const rows=r.clients.filter(c=>!clientQ||norm(c.name).includes(q)||(qd&&c.phone.includes(qd)));
+   set(list,rows.length?rows.map(c=>h('div',{class:'panel'+(c.blocked?' dim':'')},h('div',{class:'row between'},h('b',{},c.name),c.blocked?h('span',{class:'badge b-r'},t('blockedL')):h('span',{class:'hint'},fmtDate(c.created_at))),
+    h('span',{},fmtPhone(c.phone)),h('span',{class:'hint'},[t('cl_req')(c.requests),t('cl_rev')(c.reviews),t('cl_comp')(c.complaints)].join(' · ')),
+    h('button',{class:'btn ghost sm '+(c.blocked?'':'danger'),type:'button',onclick:async()=>{if(await call('admin_set_client_blocked',{p_id:c.id,p_on:!c.blocked}))viewAdmin()}},c.blocked?t('unblockC'):t('blockC')))):h('p',{class:'muted center'},t('noClientsA')))};
+  set(box,searchBox(clientQ,t('searchPh'),v=>{clientQ=v;draw()}),list);draw();
+ }
+ else if(adminTab==='complaints'){
   const r=await call('admin_complaints',{});if(!r)return;
   set(box,r.complaints.length?r.complaints.map(k=>h('div',{class:'panel',style:k.status==='open'?null:'opacity:.65'},h('div',{class:'row between'},h('b',{},t('r_'+k.reason)),h('span',{class:'badge '+(k.status==='open'?'b-r':'b-x')},k.status==='open'?t('openL'):t('resolvedL'))),
    k.body?h('p',{style:'white-space:pre-line'},k.body):null,
    h('span',{},h('a',{href:'#/m/'+k.master_id,class:'linkbtn',style:'padding:0;min-height:0'},k.master_name),' · '+fmtPhone(k.master_phone)+(k.master_active?'':' · '+t('hidden'))),
    h('span',{class:'hint'},t('fromL')+': '+k.client_name+' · '+fmtPhone(k.client_phone)+' · '+ago(k.created_at)),
    k.status==='open'?h('div',{class:'row wrap'},k.master_active?h('button',{class:'btn ghost sm danger',type:'button',onclick:async()=>{if(await call('admin_set_active',{p_id:k.master_id,p_active:false}))viewAdmin()}},t('hide')):null,h('button',{class:'btn green sm',type:'button',onclick:async()=>{if(await call('admin_resolve_complaint',{p_id:k.id}))viewAdmin()}},t('resolve'))):null)):h('p',{class:'muted center'},t('noComplaints')));
- }else if(adminTab==='pays'){
+ }
+ else if(adminTab==='pays'){
   const r=await call('admin_payments',{});if(!r)return;
   set(box,r.payments.length?r.payments.map(p=>h('div',{class:'panel'},h('div',{class:'row between'},h('b',{},p.name),h('span',{class:'badge '+(p.status==='pending'?'b-y':(p.status==='confirmed'?'b-g':'b-r'))},t('p_'+p.status))),
    h('span',{},fmtPhone(p.phone)+' · '+(p.plan.startsWith('boost')?t('boostT')+' ':'')+t(p.plan)+' · '+money(p.amount)+' '+t('sum')),h('span',{class:'hint'},ago(p.created_at)),
    p.status==='pending'?h('div',{class:'row'},h('button',{class:'btn ghost sm danger',type:'button',onclick:async()=>{if(await call('admin_decide_payment',{p_id:p.id,p_ok:false}))viewAdmin()}},t('rejectPay')),h('button',{class:'btn green sm',type:'button',onclick:async()=>{if(await call('admin_decide_payment',{p_id:p.id,p_ok:true}))viewAdmin()}},t('confirmPay'))):null)):h('p',{class:'muted center'},t('noPays')));
- }else{
-  const r=await call('admin_payments',{});if(!r)return;const c=r.config||{};const msg=h('div',{'aria-live':'polite'});
-  const pv=k=>c[k]&&c[k]!=='0'?c[k]:'';const p1=h('input',{id:'s-p1',type:'text',inputmode:'numeric',value:pv('price_m1')}),p3=h('input',{id:'s-p3',type:'text',inputmode:'numeric',value:pv('price_m3')}),b7=h('input',{id:'s-b7',type:'text',inputmode:'numeric',value:pv('price_boost7')}),b30=h('input',{id:'s-b30',type:'text',inputmode:'numeric',value:pv('price_boost30')});
-  const cn=h('input',{id:'s-card',type:'text',inputmode:'numeric',maxlength:24,value:c.card_number||'',autocomplete:'off'}),ch=h('input',{id:'s-holder',type:'text',maxlength:60,value:c.card_holder||''});
-  set(box,field('s-p1',t('priceM1'),p1),field('s-p3',t('priceM3'),p3),field('s-b7',t('priceB7'),b7),field('s-b30',t('priceB30'),b30),field('s-card',t('cardL'),cn),field('s-holder',t('holderL'),ch),msg,
-   h('button',{class:'btn yellow',type:'button',onclick:async()=>{set(msg);const x=await call('admin_set_config2',{p_price_m1:p1.value.replace(/\D/g,''),p_price_m3:p3.value.replace(/\D/g,''),p_price_b7:b7.value.replace(/\D/g,''),p_price_b30:b30.value.replace(/\D/g,''),p_card:cn.value.replace(/[^\d ]/g,'').trim(),p_holder:ch.value});if(x)set(msg,okBox(t('saved')))}},t('save')),
-   adminToken?h('button',{class:'btn ghost',type:'button',onclick:async()=>{const tk=adminToken;adminToken=null;store.set('usta_admin',null);try{await rpc('admin_logout',{p_token:tk})}catch(e){}go('#/')}},t('logout')):null);
+ }
+ else{
+  const r=await call('admin_payments',{});if(!r)return;const c=r.config||{};const msg=h('div',{'aria-live':'polite'});const pmsg=h('div',{'aria-live':'polite'});
+  const pv=k=>c[k]&&c[k]!=='0'?c[k]:'';const inp=(id,v,mode)=>h('input',{id,type:'text',inputmode:mode||'numeric',value:v,autocomplete:'off'});
+  const p1=inp('s-p1',pv('price_m1')),p3=inp('s-p3',pv('price_m3')),b7=inp('s-b7',pv('price_boost7')),b30=inp('s-b30',pv('price_boost30'));
+  const cn=inp('s-card',c.card_number||''),ch=h('input',{id:'s-holder',type:'text',maxlength:60,value:c.card_holder||''});
+  const op=h('input',{id:'s-old',type:'password',autocomplete:'current-password'}),np=h('input',{id:'s-new',type:'password',autocomplete:'new-password'});
+  set(box,h('div',{class:'card col'},field('s-p1',t('priceM1'),p1),field('s-p3',t('priceM3'),p3),field('s-b7',t('priceB7'),b7),field('s-b30',t('priceB30'),b30),field('s-card',t('cardL'),cn),field('s-holder',t('holderL'),ch),msg,
+    h('button',{class:'btn yellow',type:'button',onclick:async()=>{set(msg);const x=await call('admin_set_config2',{p_price_m1:p1.value.replace(/\D/g,''),p_price_m3:p3.value.replace(/\D/g,''),p_price_b7:b7.value.replace(/\D/g,''),p_price_b30:b30.value.replace(/\D/g,''),p_card:cn.value.replace(/[^\d ]/g,'').trim(),p_holder:ch.value});if(x)set(msg,okBox(t('saved')))}},t('save'))),
+   h('details',{class:'card col details'},h('summary',{},h('b',{},t('changePw'))),field('s-old',t('oldPw'),op),field('s-new',t('newPw8'),np),pmsg,
+    h('button',{class:'btn ghost',type:'button',onclick:async()=>{set(pmsg);try{const x=await rpc('admin_change_password',{p_token:atok,p_old:op.value,p_new:np.value});set(pmsg,x.error?errBox(x.error):okBox(t('pwChanged')));if(!x.error){op.value='';np.value=''}}catch(e){set(pmsg,errBox('net'))}}},t('save'))),
+   h('button',{class:'btn ghost',type:'button',onclick:async()=>{const tk=adminToken;adminToken=null;store.set('usta_admin',null);try{await rpc('admin_logout',{p_token:tk})}catch(e){}go('#/')}},t('logout')));
  }
 }
 

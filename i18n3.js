@@ -216,3 +216,22 @@ tk:{free:'Boş',busy:'Meşgul',statusL:'Meniň ýagdaýym',statusS:'Müşderiler
 };
 for(const l in X)Object.assign(T[l],X[l]);
 })();
+// Тексты кабинета админа v2 (админ один — тексты на русском, для других языков берутся они же)
+Object.assign(T.ru,{
+ adminT:'Кабинет администратора',tabOverview:'Обзор',tabReviews:'Отзывы',tabRequests:'Заявки',tabClients:'Клиенты',
+ ov_masters:'Мастеров',ov_visible:'видны в каталоге',ov_trial:'на пробном',ov_paid:'с оплатой',ov_expired:'подписка истекла',ov_boosted:'в ТОПе',
+ ov_clients:'Заказчиков',ov_new7:'новых за 7 дней',ov_req:'Заявок',ov_today:'сегодня',ov_7:'за 7 дней',ov_30:'за 30 дней',ov_resp:'откликов за 30 дней',
+ ov_income:'Доход за месяц',ov_total:'всего',ov_todo:'Требуют внимания',ov_pend:n=>'Оплат на проверке: '+n,ov_comp:n=>'Новых жалоб: '+n,ov_none:'Всё спокойно — новых оплат и жалоб нет',
+ searchPh:'Поиск: имя или телефон',f_all:'Все',f_trial:'Пробный',f_paid:'Оплачен',f_expired:'Истекла',f_top:'ТОП',f_comp:'Жалобы',f_hidden:'Скрытые',f_deleted:'Удалённые',
+ deletedL:'удалил профиль',restore:'Восстановить',topPlus7:'ТОП +7 дней',topOff:'Снять ТОП',reviewsBtn:'Отзывы',delForever:'Удалить навсегда',
+ delForeverQ:'Удалить мастера навсегда? Вместе с ним удалятся его отзывы, фото и переписки. Это нельзя отменить.',
+ delReviewQ:'Удалить этот отзыв? Это нельзя отменить.',f_low:'1–2 ★',noReviewsA:'Отзывов нет',reviewOf:'Мастер',
+ closeA:'Закрыть заявку',noRequestsA:'Заявок нет',blockC:'Заблокировать',unblockC:'Разблокировать',blockedL:'заблокирован',noClientsA:'Заказчиков нет',
+ cl_req:n=>'заявок: '+n,cl_rev:n=>'отзывов: '+n,cl_comp:n=>'жалоб: '+n,resp30:n=>'откликов за 30 дн.: '+n,
+ changePw:'Сменить пароль администратора',oldPw:'Текущий пароль',newPw8:'Новый пароль, от 8 символов',pwChanged:'Пароль изменён',
+ delNote:'Профиль скроется из каталога. Отзывы и рейтинг сохранятся — удалить их может только администратор.',e_blocked:'Аккаунт заблокирован администратором'
+});
+for(const l of ['uz','kaa','tk'])for(const k of ['delNote','e_blocked'])if(!T[l][k])T[l][k]=T.ru[k];
+Object.assign(T.uz,{delNote:'Profil katalogdan yaşiriladi. Şarhlar va reyting saqlanadi — ularni faqat administrator öçira oladi.',e_blocked:'Akkaunt administrator tomonidan bloklangan'});
+Object.assign(T.kaa,{delNote:'Profil katalogtan jasırıladı. Pikirler hám reyting saqlanadı — olardı tek administrator óshire aladı.',e_blocked:'Akkaunt administrator tárepinen bloklanǵan'});
+Object.assign(T.tk,{delNote:'Profil katalogdan gizlener. Synlar we reýting saklanýar — olary diňe administrator pozup bilýär.',e_blocked:'Akkaunt administrator tarapyndan petiklendi'});

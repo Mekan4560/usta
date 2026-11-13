@@ -252,6 +252,24 @@ main.nopad{padding-bottom:0;flex:0}
 .plan[disabled]{opacity:.5}
 .tabs.four{grid-template-columns:repeat(4,minmax(0,1fr))}.tabs.four button{font-size:13px;padding:0 4px}
 #app.withnav .bar{bottom:calc(67px + env(safe-area-inset-bottom,0px));padding-bottom:12px}
+.admintabs{margin:2px -16px 0;padding:0 16px 2px}
+.admintabs .fchip{background:transparent;color:#E6EAE8;border-color:#5E6C69;flex-shrink:0}
+.admintabs .fchip[aria-pressed="true"]{background:var(--yellow);color:var(--ink);border-color:var(--yellow)}
+.fchip.dark2{background:var(--ink);color:#fff;border-color:var(--ink)}
+.search.light{border:1px solid var(--line)}
+.stats3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.card.stat2{flex-direction:column;align-items:flex-start;gap:2px;padding:12px;min-width:0;color:inherit}
+.card.stat2 b{font-size:24px;font-variant-numeric:tabular-nums}.card.stat2 span{font-size:12px;color:var(--muted);line-height:1.25}
+.card.income{background:var(--ink);color:#fff;gap:2px}.card.income b{font-size:28px;font-variant-numeric:tabular-nums}.card.income span,.card.income small{color:#B9C4C0}
+.card.attn{background:#FFF3D6;gap:2px}.card.attn .linkbtn{padding:6px 0;min-height:36px}
+details.adm summary{list-style:none;cursor:pointer;display:flex;gap:10px;align-items:flex-start}
+details.adm summary::-webkit-details-marker{display:none}
+details.adm summary::after{content:'▾';margin-left:auto;color:var(--muted)}
+details.adm[open] summary::after{content:'▴'}
+details.adm .txt{min-width:0}
+.panel.dim{opacity:.72}
+.btn.okc{color:var(--green)}
+.confirm{display:flex;flex-direction:column;gap:8px;background:var(--rsoft);border-radius:12px;padding:12px;font-size:14px;color:#7A1C12}
 /* bottom nav */
 .nav{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;justify-content:space-around;align-items:center;background:var(--navbg);padding:8px max(6px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-left,0px));border-top:1px solid #262C2B;max-width:520px;margin:0 auto}
 .nav a{position:relative;width:56px;height:48px;display:flex;align-items:center;justify-content:center;color:#5C6563;border-radius:12px}
@@ -266,8 +284,8 @@ main.nopad{padding-bottom:0;flex:0}
 </head>
 <body>
 <div id="app"></div>
-<script src="data.js?v=31"></script>
-<script src="i18n3.js?v=31"></script>
-<script src="app.js?v=31"></script>
+<script src="data.js?v=32"></script>
+<script src="i18n3.js?v=32"></script>
+<script src="app.js?v=32"></script>
 </body>
 </html>
